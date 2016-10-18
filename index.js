@@ -10,5 +10,5 @@ app.get("/dades", function(req, res){
 });
 
 app.listen(8080, function(){
-  console.log("Iniciat");
+  console.log("Servidor iniciat a localhost:8080");
 });
