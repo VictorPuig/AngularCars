@@ -1,0 +1,21 @@
+<!-- Html que crida el templateUrl del car-filter.component -->
+<div class="filter">
+  <p>
+    Filter <br/>
+    Maker <br/>
+    <!-- ng-model (Quan el model canvia, les dades canvien amb ella i a l'inversa) -->
+    <!-- $ctrl (nom per defecte d'angular per el controlador)  -->
+    <!-- ng-model lligat amb les dades via carFilterController  -->
+   <input type="checkbox" ng-model="$ctrl.data.maker.ford"/> Ford <br/>
+   <input type="checkbox" ng-model="$ctrl.data.maker.toyota"/> Toyota <br/>
+   <input type="checkbox" ng-model="$ctrl.data.maker.subaru"/> Subaru <br/>
+
+   Color <br/>
+   <input type="checkbox" ng-model="$ctrl.data.color.white"/> White <br/>
+   <input type="checkbox" ng-model="$ctrl.data.color.black"/> Black <br/>
+   <input type="checkbox" ng-model="$ctrl.data.color.silver"/> Silver <br/>
+   <input type="checkbox" ng-model="$ctrl.data.color.red"/> Red <br/>
+   <input type="checkbox" ng-model="$ctrl.data.color.blue"/> Blue <br/>
+  </p>
+
+</div>

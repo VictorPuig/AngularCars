@@ -1,0 +1,62 @@
+[
+  {
+    "name": "focus",
+    "maker": "ford",
+    "color": "black"
+  },
+  {
+    "name": "fiesta",
+    "maker": "ford",
+    "color": "red"
+  },
+  {
+    "name": "kuga",
+    "maker": "ford",
+    "color": "white"
+  },
+  {
+    "name": "mondeo",
+    "maker": "ford",
+    "color": "black"
+  },
+  {
+    "name": "rav4",
+    "maker": "toyota",
+    "color": "blue"
+  },
+  {
+    "name": "cruiser",
+    "maker": "toyota",
+    "color": "black"
+  },
+  {
+    "name": "prius",
+    "maker": "toyota",
+    "color": "black"
+  },
+  {
+    "name": "yaris",
+    "maker": "toyota",
+    "color": "red"
+  },
+  {
+    "name": "xv",
+    "maker": "subaru",
+    "color": "blue"
+  },
+  {
+    "name": "forester",
+    "maker": "subaru",
+    "color": "silver"
+  },
+  {
+    "name": "outback",
+    "maker": "subaru",
+    "color": "black"
+  },
+  {
+    "name": "brz",
+    "maker": "subaru",
+    "color": "blue"
+  }
+]
