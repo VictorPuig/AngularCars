@@ -49,7 +49,7 @@ angular.
         };
 
         //Accedeix al json i el guarda al factory per poder compartirlo entre car-filter i car-list
-        $http.get("cars/cars.json")
+        $http.get("/getCars")
         .then(function(response){
           self.data.cars = response.data;
         });
