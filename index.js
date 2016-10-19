@@ -36,11 +36,11 @@ function connectaBaseDades() {
       // Tornem a intentar la conexio cada MYSQL_RECONNECT_INTERVAL segons
       setTimeout(connectaBaseDades, MYSQL_RECONNECT_INTERVAL);
     } else {
-      // Mostrem per consola que la conexio a la BDD ha sigut satisfactoria
-      console.log('Conectat a MySql amb id: ' + con.threadId);
+        // Mostrem per consola que la conexio a la BDD ha sigut satisfactoria
+        console.log('Conectat a MySql amb id: ' + con.threadId);
 
-      // La conexio ha tingut exit per tant el servidor esta online
-      mysqlStatus = true;
+        // La conexio ha tingut exit per tant el servidor esta online
+        mysqlStatus = true;
     }
   });
 

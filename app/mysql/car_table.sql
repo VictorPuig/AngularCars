@@ -1,7 +1,7 @@
 CREATE TABLE car_table (
-    `list_name` VARCHAR(8) CHARACTER SET utf8,
-    `list_maker` VARCHAR(6) CHARACTER SET utf8,
-    `list_color` VARCHAR(6) CHARACTER SET utf8
+    `name` VARCHAR(8) CHARACTER SET utf8,
+    `maker` VARCHAR(6) CHARACTER SET utf8,
+    `color` VARCHAR(6) CHARACTER SET utf8
 );
 INSERT INTO car_table VALUES ('focus','ford','black');
 INSERT INTO car_table VALUES ('fiesta','ford','red');
