@@ -2,9 +2,23 @@ angular.
   module('carFilter').
   component('carFilter', {
     templateUrl: 'car-filter/car-filter.template.html',
-    controller: ['$http', 'Data',
-      function carFilterController($http, Data) {
+    controller: ['$http', 'Data', "$scope",
+      function carFilterController($http, Data, $scope) {
         var self = this;
+
+        // Variable que representa error de servidor
+        self.err = false;
+
+        // Watch vigila el valor d'una variable (self.err)
+        $scope.$watch(function () { // Funcio que retorna self.err
+          return self.err;
+        }, function () { // Funcio quan el valor de self.err canvia
+          // Si hi ha error, es mostra un alert a l'usuari amb una descripcio
+          if (self.err) {
+            alert(self.err);
+            self.err = false; // Ja hem tractat l'error, assignem false
+          }
+        });
 
         self.data = Data;
 
@@ -50,8 +64,14 @@ angular.
 
         //Accedeix al json i el guarda al factory per poder compartirlo entre car-filter i car-list
         $http.get("/getCars")
-        .then(function(response){
-          self.data.cars = response.data;
+        .then(function(res){
+          if (res.data.err) { // Si l'objecte que rebem (json servidor) conte err
+                              // l'imprimim per consola i l'assignem a self.err
+            console.log(res.data.err);
+            self.err = res.data.err.code;
+          } else { // En cas contrari, es guarden les dades
+            self.data.cars = res.data.rows;
+          }
         });
       }
     ]

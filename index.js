@@ -36,14 +36,14 @@ app.get("/getCars", function(req, res){
   // Executa la consulta SQL
   con.query("SELECT * FROM car_table", function queryCb(err, rows) {
     if (err) {
-      // En cas d'error, imprimirlo per consola i respondre un JSON
-      // amb una key "err" amb una descripcio
-      console.err(err);
-      throw err;
+      // En cas d'error, imprimirlo per consola
+      console.error(err);
+      // L'error s'enviara al client dins d'un objecte sota la key "err"
+      res.send({err: err});
+    } else {
+      // Retornem les dades de la BDD dins d'un objecte sota la key "rows"
+      res.send({rows: rows});
     }
-
-    // Retornem les dades de la BDD
-    res.send(rows);
   });
 });
 
