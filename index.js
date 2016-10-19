@@ -16,7 +16,8 @@ con.connect(function(err) {
   if (err) {
     // En cas d'error, mostrar per consola
     console.error('Error conectant a MySql: ' + err.stack);
-    return;
+    // Sortim del programa amb codi d'error 1
+    process.exit(1);
   }
   // Mostrem per consola que la conexio a la BDD ha sigut satisfactoria
   console.log('Conectat a MySql amb id: ' + con.threadId);
