@@ -15,6 +15,10 @@ var con;
 function connectaBaseDades() {
   console.log("Intentant connectar al servidor MySQL");
 
+  // La funcio connectaBaseDades inicia la conexio, per tant,
+  // per definicio, la conexio esta offline fins que no tingui exit
+  mysqlStatus = false;
+
   // Creem una conexio a la BDD
   con = mysql.createConnection({
     host: '192.168.1.43',
