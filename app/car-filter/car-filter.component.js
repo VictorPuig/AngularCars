@@ -56,15 +56,15 @@ angular.
               self.data.cars = res.data.rows;
             }
           });
-        }, true);
+        }, true); //true per a que $watch efectui deep comparation sobre els filtres
 
-        //.keys (funcio que agafa un objecte (self.data.maker) i retorna una array amb totes les keys (Marcas))
+        //.keys (funcio que agafa un objecte (self.data.filter.maker) i retorna una array amb totes les keys)
         //.every (funcio de arrays que pregunta a cada element i comprova que cada element sigui true, retorna true, en el cas contrari, retorna false)
         //Funcio filterCars s'executa per cada cotxe comprovant si s'ha de mostrar o no
         self.data.filterCars = function filterCars(el) {
           var makerEmpty = Object
             .keys(self.data.filter.maker)
-            .every(function (key) { return !self.data.filter.maker[key]; });
+            .every(function (key) { return !self.data.filter.maker[key]; }); // si algun dels valors es false, retorna false
           var colorEmpty = Object
             .keys(self.data.filter.color)
             .every(function (key) { return !self.data.filter.color[key]; });
