@@ -1,7 +1,8 @@
 <!-- Html que el crida car-filter.component  -->
 <div class="gallery">
-  <!-- Bucle que per cada cotxe (cntrl.data.cars) els filtra executant la funcio (ctrl.data.filterCars) i executa la funció (galleryFilter) que els agrupa de 3 en 3 -->
-  <div class="div1" ng-repeat="carGroup in $ctrl.data.cars | filter:$ctrl.data.filterCars | galleryFilter">
+  <!-- Bucle que per l'array de cotxes (cntrl.data.cars) -->
+  <!-- executa la funció (galleryFilter) que els agrupa de 3 en 3 -->
+  <div class="div1" ng-repeat="carGroup in $ctrl.data.cars | galleryFilter">
     <!-- Bucle que per cada grup de 3 fa una linia de la galeria imprimint la imatge de cada cotxe -->
     <div class="div2" ng-repeat="car in carGroup">
         <img width="250px" height="200px" ng-src="{{car | getImgUrl}}"></img>

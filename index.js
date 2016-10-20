@@ -1,7 +1,62 @@
 var MYSQL_RECONNECT_INTERVAL = 1000;
 
+// DEPENDENCIES
 var express = require("express");
+var bodyParser = require("body-parser");
 var mysql = require("mysql");
+var _ = require("lodash");
+
+// Rep els filtres i genera una consulta SQL
+function getConsulta (filter) {
+  // Consulta general
+  var consulta = "SELECT * FROM car_model";
+
+  // makersSeleccionats conte els valors de les keys dels filtres seleccionats
+  var makersSeleccionats = Object.keys(filter.maker) // Object.keys retorna un array de les claus del objecte filter.maker
+    .filter(function(k){  // .filter (funcio d'arrays) executa una funcio per cada element de l'array
+                          // si aquesta funcio, retorna true, l'element es queda a l'array
+                          // en cas contrari, l'elimina d l'array
+      return filter.maker[k]; // retorna el valor que tenia la clau en el objecte original
+    });
+
+  var colorsSeleccionats = Object.keys(filter.color).filter(function(k){return filter.color[k];});
+
+  // Si hi ha algun filtre seleccionat, s'afegeix "WHERE" a la consulta
+  if (makersSeleccionats.length !== 0 || colorsSeleccionats.length !== 0)
+    consulta += " WHERE ";
+
+  // Si hi ha fabricants seeleccionats
+  if (makersSeleccionats.length !== 0) {
+    // .map es una funcio que executa una funcio per cada element de l'array
+    // i substitueix aquest element pel valor retornat per la funcio
+    makersSeleccionats = makersSeleccionats.map(function(m){
+      return "name like '" + m + "'";
+    });
+    // _.join (lodash) converteix un array a una cadena interposant el segon parametre
+    // entre els seus elements
+    makersSeleccionats = _.join(makersSeleccionats, " OR ");
+    console.log("Makers: " + makersSeleccionats);
+
+    consulta += "maker in (SELECT id FROM car_maker WHERE " + makersSeleccionats + ")";
+  }
+
+  // Si els dos filtres tenen alguna cosa seleccionada, afegim "AND" a la consulta
+  if (makersSeleccionats.length !== 0 && colorsSeleccionats.length !== 0)
+    consulta += " AND ";
+
+  if (colorsSeleccionats.length !== 0) {
+    colorsSeleccionats = colorsSeleccionats.map(function(m){return "name like '" + m + "'"});
+    colorsSeleccionats = _.join(colorsSeleccionats, " OR ");
+    console.log("Colors: " + colorsSeleccionats);
+
+    consulta += "color in (SELECT id FROM car_color WHERE " + colorsSeleccionats + ")";
+  }
+
+  //
+  consulta += ";";
+
+  return consulta;
+}
 
 var app = express();
 
@@ -62,6 +117,8 @@ connectaBaseDades();
 
 // Prepara el directori "app" per a recursos estatics
 app.use(express.static("app"));
+//Parseja el json a objectes de javascript per poder treballar amb ells
+app.use(bodyParser.json());
 
 // Ruta root
 app.get("/", function(req, res){
@@ -69,20 +126,27 @@ app.get("/", function(req, res){
 });
 
 // Ruta getCars retorna les dades de la crida de la BDD en JSON
-app.get("/getCars", function(req, res){
+app.post("/getCars", function(req, res){
+  console.log("Peticio /getCars");
+
   // Comprovem que tenim conexio a mysql i en cas negatiu,
   // s'envia un missatge d'error a l'usuari
   if (!mysqlStatus) {
     res.send({err: {code: "Servidor MySQL offline!"}});
   } else { // Si hi ha conexio, continuem amb la query
+    var consulta = getConsulta(req.body);
+
+    console.log("Consulta: " + consulta);
     // Executa la consulta SQL
-    con.query("SELECT * FROM car_table", function queryCb(err, rows) {
+    con.query(consulta, function queryCb(err, rows) {
       if (err) {
         // En cas d'error, imprimirlo per consola
         console.error(err);
         // L'error s'enviara al client dins d'un objecte sota la key "err"
         res.send({err: err});
       } else {
+        console.log(rows);
+
         // Retornem les dades de la BDD dins d'un objecte sota la key "rows"
         res.send({rows: rows});
       }
