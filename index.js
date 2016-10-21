@@ -11,15 +11,25 @@ function getConsulta (filter) {
   // Consulta general
   var consulta = "SELECT * FROM car_model";
 
-  // makersSeleccionats conte els valors de les keys dels filtres seleccionats
-  var makersSeleccionats = Object.keys(filter.maker) // Object.keys retorna un array de les claus del objecte filter.maker
-    .filter(function(k){  // .filter (funcio d'arrays) executa una funcio per cada element de l'array
-                          // si aquesta funcio, retorna true, l'element es queda a l'array
-                          // en cas contrari, l'elimina d l'array
-      return filter.maker[k]; // retorna el valor que tenia la clau en el objecte original
+  // makersSeleccionats conte les id's dels makers seleccionats
+  var makersSeleccionats = filter.maker
+    .filter(function (el){ //.filter (funcio d'arrays) executa una funcio per cada element de l'array
+                           // si aquesta funcio, retorna true, l'element es queda a l'array
+                           // en cas contrari, l'elimina d l'array
+      return el.seleccionat; //retorna el valor .seleccionat de cada element
+    })
+    .map(function (el){ //.map executa la funcio per a cada element
+      // i el substitueix per el valor que retorna la funcio (id del maker)
+      return el.id;
     });
 
-  var colorsSeleccionats = Object.keys(filter.color).filter(function(k){return filter.color[k];});
+  var colorsSeleccionats = filter.color
+    .filter(function (el){
+        return el.seleccionat;
+    })
+    .map(function (el){
+      return el.id;
+    });
 
   // Si hi ha algun filtre seleccionat, s'afegeix "WHERE" a la consulta
   if (makersSeleccionats.length !== 0 || colorsSeleccionats.length !== 0)
@@ -27,17 +37,12 @@ function getConsulta (filter) {
 
   // Si hi ha fabricants seeleccionats
   if (makersSeleccionats.length !== 0) {
-    // .map es una funcio que executa una funcio per cada element de l'array
-    // i substitueix aquest element pel valor retornat per la funcio
-    makersSeleccionats = makersSeleccionats.map(function(m){
-      return "name like '" + m + "'";
-    });
     // _.join (lodash) converteix un array a una cadena interposant el segon parametre
     // entre els seus elements
-    makersSeleccionats = _.join(makersSeleccionats, " OR ");
+    makersSeleccionats = _.join(makersSeleccionats, ", ");
     console.log("Makers: " + makersSeleccionats);
 
-    consulta += "maker in (SELECT id FROM car_maker WHERE " + makersSeleccionats + ")";
+    consulta += "maker in (" + makersSeleccionats + ")";
   }
 
   // Si els dos filtres tenen alguna cosa seleccionada, afegim "AND" a la consulta
@@ -45,11 +50,10 @@ function getConsulta (filter) {
     consulta += " AND ";
 
   if (colorsSeleccionats.length !== 0) {
-    colorsSeleccionats = colorsSeleccionats.map(function(m){return "name like '" + m + "'"});
-    colorsSeleccionats = _.join(colorsSeleccionats, " OR ");
+    colorsSeleccionats = _.join(colorsSeleccionats, ", ");
     console.log("Colors: " + colorsSeleccionats);
 
-    consulta += "color in (SELECT id FROM car_color WHERE " + colorsSeleccionats + ")";
+    consulta += "color in (" + colorsSeleccionats + ")";
   }
 
   //
@@ -152,6 +156,52 @@ app.post("/getCars", function(req, res){
       }
     });
   }
+});
+
+//app.get defineix la ruta del servidor
+//(/getInfo) retorna les dades del servidor
+app.get("/getInfo", function(req, res){
+  console.log("Peticio informacio");
+
+  //objecte que conté els valors dels filtres
+  var info = {};
+  //variable auxiliar per saber quan les dues querys han finalitzat
+  var estatQuery = 0;
+
+  //Funcio que s'executa sempre que acaba 1 query,
+  //pero només enviará les dades a angular quan hagin finalitzat les dues querys
+  function estatCheck () {
+    if (estatQuery === 2) {
+      res.send(info);
+    }
+  }
+
+  //Una vegada la query ha finalitzat, s'executa una funció que guarda el resultat de la query
+  //en info.maker
+  con.query('SELECT * FROM car_maker', function queryCIM(err,rows){
+    if (err) {
+      console.error(err);
+    }
+    else {
+      console.log(rows);
+      info.maker = rows;
+      estatQuery++;
+      estatCheck();
+    }
+  });
+  
+  con.query('SELECT * FROM car_color', function queryCIC(err,rows){
+    if (err) {
+      console.error(err);
+    }
+    else {
+      console.log(rows);
+      info.color = rows;
+      estatQuery++;
+      estatCheck();
+    }
+  });
+
 });
 
 // Iniciem el servidor

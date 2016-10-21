@@ -24,19 +24,20 @@ angular.
 
         // filter es un objecte buit que conte maker i color
         self.data.filter = {};
-        self.data.filter.maker = {
-          "ford": false,
-          "toyota": false,
-          "subaru": false
-        };
 
-        self.data.filter.color = {
-          "white": false,
-          "black": false,
-          "silver": false,
-          "red": false,
-          "blue": false
-        };
+        //Angular rep les dades dels filtres de /getInfo
+        $http.get('/getInfo').then(function(res){
+          //executa una funcio que afegeix l'atribut seleccionat a cada element de self.data.filter.maker
+          self.data.filter.maker = res.data.maker.map(function(el){
+            //s'inicialitza el valor a false
+            el.seleccionat = false;
+            return el;
+          })
+          self.data.filter.color = res.data.color.map(function(el){
+            el.seleccionat = false;
+            return el;
+          })
+        });
 
         // $watch vigila si el objecte data.filter ha sufert canvis
         $scope.$watch(function () { // funcio que retorna data.filter
