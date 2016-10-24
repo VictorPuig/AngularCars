@@ -8,6 +8,10 @@ var _ = require("lodash");
 
 // Rep els filtres i genera una consulta SQL
 function getConsulta (filter) {
+  // Valors per defecte de offset i limit si aquests no es proporcionen
+  if (filter.offset === undefined) filter.offset = 1;
+  if (filter.limit === undefined) filter.limit = 6;
+
   // Consulta general
   var consulta = "SELECT * FROM car_model";
 
@@ -56,7 +60,9 @@ function getConsulta (filter) {
     consulta += "color in (" + colorsSeleccionats + ")";
   }
 
-  //
+  // Afegir a la consulta limit i offset per a que els cotxes es mostrin de 3 en 3
+  consulta += " LIMIT " + filter.limit + " OFFSET " + filter.offset;
+
   consulta += ";";
 
   return consulta;
@@ -189,7 +195,7 @@ app.get("/getInfo", function(req, res){
       estatCheck();
     }
   });
-  
+
   con.query('SELECT * FROM car_color', function queryCIC(err,rows){
     if (err) {
       console.error(err);

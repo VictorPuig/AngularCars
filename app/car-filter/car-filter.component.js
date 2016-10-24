@@ -20,7 +20,11 @@ angular.
           }
         });
 
+        // Objecte on s'emmagatzema tota la informacio i l'estat de l'app
         self.data = Data;
+
+        // S'inicialitza self.filter.cars a un vector buit
+        self.data.cars = [];
 
         // filter es un objecte buit que conte maker i color
         self.data.filter = {};
@@ -39,24 +43,49 @@ angular.
           })
         });
 
-        // $watch vigila si el objecte data.filter ha sufert canvis
-        $scope.$watch(function () { // funcio que retorna data.filter
-          return self.data.filter;
-        }, function onChangeFilter () { // funcio que s'executa cada vegada que hi ha canvis
-          console.log("Model del filtre canviat");
+        self.data.getCars = function getCars(reset) {
+          // Si no es pasa cap argument, posem reset a false.
+          if (reset === undefined) reset = false;
+
+          // Si reset es pasa com a true, vol dir que el filtre ha canviat.
+          // Per tant, esborrem tots els cotxes i començem desde 0.
+          if (reset) {
+            self.data.cars = [];
+          }
+
+          // Clonem el filter per no interferir amb la resta de la app
+          var filter = _.cloneDeep(self.data.filter);
+
+          // Configurem l'objecte filter per que la consulta SQL ens retorni
+          // el nombre de cotxes desitjat a partir de l'ultim que es mostra. (self.data.cars.length)
+          filter.offset = self.data.cars.length;
+          filter.limit = 3;
 
           // Fa una peticio POST al servidor amb les dades de data.filter
           // en el cos de la peticio
-          $http.post("/getCars", self.data.filter)
+          $http.post("/getCars", filter)
           .then(function(res){
             if (res.data.err) { // Si l'objecte que rebem (json servidor) conte err
                                 // l'imprimim per consola i l'assignem a self.err
               console.log(res.data.err);
               self.err = res.data.err.code;
             } else { // En cas contrari, es guarden les dades
-              self.data.cars = res.data.rows;
+              // Concatenem les noves dades de cotxes rebudes a les que ja tenim
+              self.data.cars = self.data.cars.concat(res.data.rows);
             }
           });
+        }
+
+        // $watch vigila si el objecte data.filter ha sufert canvis
+        $scope.$watch(function () { // funcio que retorna data.filter
+          return self.data.filter;
+        }, function onChangeFilter () { // funcio que s'executa cada vegada que hi ha canvis
+          console.log("Model del filtre canviat");
+
+          // Comprovar que el filtre ja s'ha descarrgat i descarreguem els cotxes
+          if (!_.isEmpty(self.data.filter))
+            self.data.getCars(true);
+
         }, true);
       }
     ]
