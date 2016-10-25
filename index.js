@@ -184,11 +184,14 @@ app.get("/getInfo", function(req, res){
 
   //Una vegada la query ha finalitzat, s'executa una funció que guarda el resultat de la query
   //en info.maker
-  con.query('SELECT * FROM car_maker', function queryCIM(err,rows){
+  con.query('SELECT * FROM car_maker', function queryCIM(err, rows){
     if (err) {
+      // En cas d'error, imprimirlo per consola
       console.error(err);
-    }
-    else {
+      // L'error s'enviara al client dins d'un objecte sota la key "err"
+      res.send({err: err});
+      return;
+    } else {
       console.log(rows);
       info.maker = rows;
       estatQuery++;
@@ -196,11 +199,14 @@ app.get("/getInfo", function(req, res){
     }
   });
 
-  con.query('SELECT * FROM car_color', function queryCIC(err,rows){
+  con.query('SELECT * FROM car_color', function queryCIC(err, rows){
     if (err) {
+      // En cas d'error, imprimirlo per consola
       console.error(err);
-    }
-    else {
+      // L'error s'enviara al client dins d'un objecte sota la key "err"
+      res.send({err: err});
+      return;
+    } else {
       console.log(rows);
       info.color = rows;
       estatQuery++;
