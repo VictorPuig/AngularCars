@@ -175,9 +175,9 @@ app.get("/getInfo", function(req, res){
   var estatQuery = 0;
 
   //Funcio que s'executa sempre que acaba 1 query,
-  //pero només enviará les dades a angular quan hagin finalitzat les dues querys
+  //pero només enviará les dades a angular quan hagin finalitzat les 3 querys
   function estatCheck () {
-    if (estatQuery === 2) {
+    if (estatQuery === 3) {
       res.send(info);
     }
   }
@@ -209,6 +209,23 @@ app.get("/getInfo", function(req, res){
     } else {
       console.log(rows);
       info.color = rows;
+      estatQuery++;
+      estatCheck();
+    }
+  });
+
+  // Query que conta el nombre de rows de la taula de cotxes
+  con.query('SELECT COUNT(*) as count FROM car_model', function queryCCM(err, rows){
+    if (err) {
+      // En cas d'error, imprimirlo per consola
+      console.error(err);
+      // L'error s'enviara al client dins d'un objecte sota la key "err"
+      res.send({err: err});
+      return;
+    } else {
+      console.log(rows);
+      // rows es una llista de resultats. (rows[0].count el nombre de rows total de car_model)
+      info.count = rows[0].count;
       estatQuery++;
       estatCheck();
     }

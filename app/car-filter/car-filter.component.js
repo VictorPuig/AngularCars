@@ -41,6 +41,8 @@ angular.
             el.seleccionat = false;
             return el;
           })
+          // Rebem el nombre maxim de imatges en el servidor SQL.
+          self.data.count = res.data.count;
         });
 
         // Aquesta funcio comprova si hi ha espai per afegir mes imatges
@@ -72,6 +74,10 @@ angular.
           // Si es la primera vegada que s'executa la web o algun filtre canvia,
           // la query demana 6 cotxes. En cas contrari demana 3.
           filter.limit = reset ? 6 : 3;
+
+          // Si el comptador de les imatges que ja es mostren es igual al total
+          // d'imatges surt de la funcio i no en demana mes.
+          if (filter.offset >= self.data.count) return;
 
           // Fa una peticio POST al servidor amb les dades de data.filter
           // en el cos de la peticio
