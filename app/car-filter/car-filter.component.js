@@ -2,8 +2,8 @@ angular.
   module('carFilter').
   component('carFilter', {
     templateUrl: 'car-filter/car-filter.template.html',
-    controller: ['$http', 'Data', "$scope",
-      function carFilterController($http, Data, $scope) {
+    controller: ['$http', 'Data', "$scope", "$window", "$timeout",
+      function carFilterController($http, Data, $scope, $window, $timeout) {
         var self = this;
 
         // Variable que representa error de servidor
@@ -43,7 +43,16 @@ angular.
           })
         });
 
-        self.data.getCars = function getCars(reset) {
+        // Aquesta funcio comprova si hi ha espai per afegir mes imatges
+        function checkBottom () {
+          // galleryBottom es la distancia en px desde la part de dalt de la web
+          // fins a la part de baix de la galeria
+          var galleryBottom = $window.document.querySelector(".gallery").getBoundingClientRect().bottom;
+          // retornem true si la pagina es mes alta que la galeria
+          return galleryBottom - $window.innerHeight <= 0;
+        }
+
+        function getCars(reset) {
           // Si no es pasa cap argument, posem reset a false.
           if (reset === undefined) reset = false;
 
@@ -59,7 +68,10 @@ angular.
           // Configurem l'objecte filter per que la consulta SQL ens retorni
           // el nombre de cotxes desitjat a partir de l'ultim que es mostra. (self.data.cars.length)
           filter.offset = self.data.cars.length;
-          filter.limit = 3;
+
+          // Si es la primera vegada que s'executa la web o algun filtre canvia,
+          // la query demana 6 cotxes. En cas contrari demana 3.
+          filter.limit = reset ? 6 : 3;
 
           // Fa una peticio POST al servidor amb les dades de data.filter
           // en el cos de la peticio
@@ -72,9 +84,24 @@ angular.
             } else { // En cas contrari, es guarden les dades
               // Concatenem les noves dades de cotxes rebudes a les que ja tenim
               self.data.cars = self.data.cars.concat(res.data.rows);
+
+              // Espera a que angular dibuixi la pagina i despres comprova
+              // si hi ha espai suficient per mostrar mes cotxes i els demana.
+              $timeout(function(){
+                if (checkBottom()) getCars();
+              }, 0);
+
             }
           });
-        }
+        };
+
+        // addEventListener ens permet especificar una funcio que s'executara
+        // quan es produeixi un event (en aquest cas "scroll")
+        // _.debounce s'espera a que es deixin de produir events per cridar la funcio
+        $window.addEventListener("scroll", _.debounce(function(e){
+          if (checkBottom())
+            getCars();
+        }, 100));
 
         // $watch vigila si el objecte data.filter ha sufert canvis
         $scope.$watch(function () { // funcio que retorna data.filter
@@ -84,7 +111,7 @@ angular.
 
           // Comprovar que el filtre ja s'ha descarrgat i descarreguem els cotxes
           if (!_.isEmpty(self.data.filter))
-            self.data.getCars(true);
+            getCars(true);
 
         }, true);
       }
