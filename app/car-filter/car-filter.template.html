@@ -5,11 +5,11 @@
     <!-- Itera sobre les claus i valors corresponents del filtre -->
     <div ng-repeat="(key,value) in $ctrl.data.filter">
       <!-- Nom del tipus del filtre -->
-      {{key}}
+      {{key | titleCase}}
       <!-- Itera sobre els diferents valors que pren el filtre -->
       <div ng-repeat="filter in value">
           <!-- Crea cada checkbox. ng-model = filter.seleccionat pren el valor (boolean) de cada item -->
-        <input type="checkbox" ng-model="filter.seleccionat"/> {{filter.name}} <br/> <!-- filter.name pren el valor del item (ford) -->
+        <input type="checkbox" ng-model="filter.seleccionat"/> {{filter.name | titleCase}} <br/> <!-- filter.name pren el valor del item (ford) -->
       </div>
     </div>
   </p>
