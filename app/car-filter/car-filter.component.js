@@ -6,6 +6,8 @@ angular.
       function carFilterController($http, Data, $scope, $window, $timeout) {
         var self = this;
 
+        //$http.defaults.cache = true;
+
         // Variable que representa error de servidor
         self.err = false;
 
@@ -41,8 +43,6 @@ angular.
             el.seleccionat = false;
             return el;
           })
-          // Rebem el nombre maxim de imatges en el servidor SQL.
-          self.data.count = res.data.count;
         });
 
         // Aquesta funcio comprova si hi ha espai per afegir mes imatges
@@ -77,7 +77,7 @@ angular.
 
           // Si el comptador de les imatges que ja es mostren es igual al total
           // d'imatges surt de la funcio i no en demana mes.
-          if (filter.offset >= self.data.count) return;
+          if (self.data.count && filter.offset >= self.data.count) return;
 
           // Fa una peticio POST al servidor amb les dades de data.filter
           // en el cos de la peticio
@@ -90,6 +90,8 @@ angular.
             } else { // En cas contrari, es guarden les dades
               // Concatenem les noves dades de cotxes rebudes a les que ja tenim
               self.data.cars = self.data.cars.concat(res.data.rows);
+
+              self.data.count = res.data.count;
 
               // Espera a que angular dibuixi la pagina i despres comprova
               // si hi ha espai suficient per mostrar mes cotxes i els demana.

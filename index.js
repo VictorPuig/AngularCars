@@ -6,14 +6,17 @@ var bodyParser = require("body-parser");
 var mysql = require("mysql");
 var _ = require("lodash");
 
-// Rep els filtres i genera una consulta SQL
+// Rep els filtres i genera les consultes SQL
 function getConsulta (filter) {
   // Valors per defecte de offset i limit si aquests no es proporcionen
   if (filter.offset === undefined) filter.offset = 1;
   if (filter.limit === undefined) filter.limit = 6;
 
-  // Consulta general
-  var consulta = "SELECT * FROM car_model";
+  // Objecte que contindra les dos querys
+  var querys = {};
+
+  // Variabñe on es guarda la consulta general
+  var consulta = "";
 
   // makersSeleccionats conte les id's dels makers seleccionats
   var makersSeleccionats = filter.maker
@@ -60,12 +63,19 @@ function getConsulta (filter) {
     consulta += "color in (" + colorsSeleccionats + ")";
   }
 
+  // Querys.data conte la consulta que demana les dades
+  querys.data = "SELECT * FROM car_model" + consulta;
+
   // Afegir a la consulta limit i offset per a que els cotxes es mostrin de 3 en 3
-  consulta += " LIMIT " + filter.limit + " OFFSET " + filter.offset;
+  querys.data += " LIMIT " + filter.limit + " OFFSET " + filter.offset;
+  querys.data += ";";
 
-  consulta += ";";
+  // Querys.count conte la consulta que retorna el nombre de rows sense limitar (LIMIT i OFFSET)
+  querys.count = "SELECT COUNT(*) as count FROM car_model" + consulta;
+  querys.count += ";";
 
-  return consulta;
+  // Retornem l'objecte que conte les dos consultes
+  return querys;
 }
 
 var app = express();
@@ -146,9 +156,22 @@ app.post("/getCars", function(req, res){
   } else { // Si hi ha conexio, continuem amb la query
     var consulta = getConsulta(req.body);
 
-    console.log("Consulta: " + consulta);
+    // Hem de fer dos consulter per cada peticio a /getCars
+    // infoCars es l'objecte que contindra el resultat de les dues
+    var infoCars = {};
+    var estatQuery = 0;
+
+    //Funcio que s'executa sempre que acaba 1 query,
+    //pero només enviará les dades a angular quan hagin finalitzat les 3 querys
+    function estatCheck () {
+      if (estatQuery === 2) {
+        res.send(infoCars);
+      }
+    }
+
     // Executa la consulta SQL
-    con.query(consulta, function queryCb(err, rows) {
+    con.query(consulta.data, function queryCb(err, rows) {
+      console.log("Consulta: " + consulta.data);
       if (err) {
         // En cas d'error, imprimirlo per consola
         console.error(err);
@@ -156,9 +179,24 @@ app.post("/getCars", function(req, res){
         res.send({err: err});
       } else {
         console.log(rows);
+        infoCars.rows = rows;
+        estatQuery++;
+        estatCheck();
+      }
+    });
 
-        // Retornem les dades de la BDD dins d'un objecte sota la key "rows"
-        res.send({rows: rows});
+    con.query(consulta.count, function queryCb(err, count) {
+      console.log("ConsultaCount: " + consulta.count);
+      if (err) {
+        // En cas d'error, imprimirlo per consola
+        console.error(err);
+        // L'error s'enviara al client dins d'un objecte sota la key "err"
+        res.send({err: err});
+      } else {
+        console.log(count);
+        infoCars.count = count[0].count;
+        estatQuery++;
+        estatCheck();
       }
     });
   }
@@ -175,9 +213,9 @@ app.get("/getInfo", function(req, res){
   var estatQuery = 0;
 
   //Funcio que s'executa sempre que acaba 1 query,
-  //pero només enviará les dades a angular quan hagin finalitzat les 3 querys
+  //pero només enviará les dades a angular quan hagin finalitzat les 2 querys
   function estatCheck () {
-    if (estatQuery === 3) {
+    if (estatQuery === 2) {
       res.send(info);
     }
   }
@@ -190,7 +228,6 @@ app.get("/getInfo", function(req, res){
       console.error(err);
       // L'error s'enviara al client dins d'un objecte sota la key "err"
       res.send({err: err});
-      return;
     } else {
       console.log(rows);
       info.maker = rows;
@@ -205,27 +242,9 @@ app.get("/getInfo", function(req, res){
       console.error(err);
       // L'error s'enviara al client dins d'un objecte sota la key "err"
       res.send({err: err});
-      return;
     } else {
       console.log(rows);
       info.color = rows;
-      estatQuery++;
-      estatCheck();
-    }
-  });
-
-  // Query que conta el nombre de rows de la taula de cotxes
-  con.query('SELECT COUNT(*) as count FROM car_model', function queryCCM(err, rows){
-    if (err) {
-      // En cas d'error, imprimirlo per consola
-      console.error(err);
-      // L'error s'enviara al client dins d'un objecte sota la key "err"
-      res.send({err: err});
-      return;
-    } else {
-      console.log(rows);
-      // rows es una llista de resultats. (rows[0].count el nombre de rows total de car_model)
-      info.count = rows[0].count;
       estatQuery++;
       estatCheck();
     }
