@@ -1,5 +1,6 @@
 var MYSQL_RECONNECT_INTERVAL = 1000;
 var MEMCACHED_LIFETIME = 10;
+var MEMCACHED_TIMEOUT = 100;
 
 // DEPENDENCIES
 var express = require("express");
@@ -149,14 +150,17 @@ function queryDB (query, cb) {
   // key es la query sense espais, per que memcached es queixa
   var key = query.replace(/\s/g, '');
 
-  console.log("queryDB: demanant resposta a memcached");
-  // Demanem a memcached el resultat de la consulta (data)
-  mem.get(key, function (err, data) {
+  var memcachedGetCb = function (err, data) {
+    if (err)
+      console.err("queryDB: memcached: ", err);
+
     // si la esposta esta a cache, la retornem
     if (data !== undefined) {
       console.log("queryDB: memcached te la resposta. executant cb");
       return cb(undefined, data);
     }
+
+    memcachedStatus = !(err === undefined && data === undefined);
 
     console.log("queryDB: demanant la resposta a SQL");
     // en cas de que no tingui la resposta, demanem la resposta a SQL
@@ -164,19 +168,54 @@ function queryDB (query, cb) {
       if (err)
         return cb(err);
 
-      console.log("queryDB: guardant resposta a memcached");
-      // guardem la resposta de la consulta SQL a memcached
-      mem.set(key, rows, MEMCACHED_LIFETIME, function (err) {
-        if (err)
-          console.error("queryDB: guardar a memcached ha fallat");
-      });
+      if (memcachedStatus) {
+        console.log("queryDB: guardant resposta a memcached");
+        // guardem la resposta de la consulta SQL a memcached
+        mem.set(key, rows, MEMCACHED_LIFETIME, function (err) {
+          if (err)
+            console.error("queryDB: guardar a memcached ha fallat");
+        });
+      }
 
       console.log("queryDB: executant cb");
       // retornem la resposta
       cb(undefined, rows);
     });
-  })
+  };
+
+  var aux = true;
+
+  console.log("queryDB: demanant resposta a memcached");
+  // Demanem a memcached el resultat de la consulta (data)
+  //mem.get es una funcio que pregunta al servidor memcached per la key ( query )
+  //Si memcached li respon en menys temps del especificat en el timeout
+  //executa la funcio memcachedGetCb que continua el proces de la query
+  //marca aux a false perque no es torni a executar la funcio memcachedGetCb
+  mem.get(key, function(err, data) {
+    if (aux) {
+      aux = false;
+      console.log("queryDB: memcached ha respos: ", err, data);
+      //Execucio de memcachedGetCb
+      //amb parametres que el servidor memcached ha proporcionat com a respostes
+      memcachedGetCb(err, data);
+    }
+  });
+
+  //Si ha passat el temps especificat en el timeot i mem.get no ha rebut resposta
+  // del servidor memcached, executa la funcio memcachedGetCb sense parametres
+  // per continuar el proces
+  setTimeout(function () {
+    if (aux) {
+      aux = false;
+      console.error("queryDB: memcached ha trigat massa en respondre!");
+      memcachedGetCb();
+    }
+  }, MEMCACHED_TIMEOUT);
 }
+
+queryDB("select * from car_model;", function(err, data){
+  console.log("err:", err, "data:", data);
+});
 
 // Prepara el directori "app" per a recursos estatics
 app.use(express.static("app"));
@@ -250,49 +289,52 @@ app.post("/getCars", function(req, res){
 app.get("/getInfo", function(req, res){
   console.log("Peticio informacio");
 
-  //objecte que conté els valors dels filtres
-  var info = {};
-  //variable auxiliar per saber quan les dues querys han finalitzat
-  var estatQuery = 0;
+  if (!mysqlStatus) {
+    res.send({err: {code: "Servidor MySQL offline!"}});
+  } else {
+    //objecte que conté els valors dels filtres
+    var info = {};
+    //variable auxiliar per saber quan les dues querys han finalitzat
+    var estatQuery = 0;
 
-  //Funcio que s'executa sempre que acaba 1 query,
-  //pero només enviará les dades a angular quan hagin finalitzat les 2 querys
-  function estatCheck () {
-    if (estatQuery === 2) {
-      res.send(info);
+    //Funcio que s'executa sempre que acaba 1 query,
+    //pero només enviará les dades a angular quan hagin finalitzat les 2 querys
+    function estatCheck () {
+      if (estatQuery === 2) {
+        res.send(info);
+      }
     }
+
+    //Una vegada la query ha finalitzat, s'executa una funció que guarda el resultat de la query
+    //en info.maker
+    queryDB('SELECT * FROM car_maker', function queryCIM(err, rows){
+      if (err) {
+        // En cas d'error, imprimirlo per consola
+        console.error(err);
+        // L'error s'enviara al client dins d'un objecte sota la key "err"
+        res.send({err: err});
+      } else {
+        //console.log(rows);
+        info.maker = rows;
+        estatQuery++;
+        estatCheck();
+      }
+    });
+
+    queryDB('SELECT * FROM car_color', function queryCIC(err, rows){
+      if (err) {
+        // En cas d'error, imprimirlo per consola
+        console.error(err);
+        // L'error s'enviara al client dins d'un objecte sota la key "err"
+        res.send({err: err});
+      } else {
+        //console.log(rows);
+        info.color = rows;
+        estatQuery++;
+        estatCheck();
+      }
+    });
   }
-
-  //Una vegada la query ha finalitzat, s'executa una funció que guarda el resultat de la query
-  //en info.maker
-  queryDB('SELECT * FROM car_maker', function queryCIM(err, rows){
-    if (err) {
-      // En cas d'error, imprimirlo per consola
-      console.error(err);
-      // L'error s'enviara al client dins d'un objecte sota la key "err"
-      res.send({err: err});
-    } else {
-      //console.log(rows);
-      info.maker = rows;
-      estatQuery++;
-      estatCheck();
-    }
-  });
-
-  queryDB('SELECT * FROM car_color', function queryCIC(err, rows){
-    if (err) {
-      // En cas d'error, imprimirlo per consola
-      console.error(err);
-      // L'error s'enviara al client dins d'un objecte sota la key "err"
-      res.send({err: err});
-    } else {
-      //console.log(rows);
-      info.color = rows;
-      estatQuery++;
-      estatCheck();
-    }
-  });
-
 });
 
 // Iniciem el servidor
