@@ -1,9 +1,11 @@
 var MYSQL_RECONNECT_INTERVAL = 1000;
+var MEMCACHED_LIFETIME = 10;
 
 // DEPENDENCIES
 var express = require("express");
 var bodyParser = require("body-parser");
 var mysql = require("mysql");
+var Memcached = require('memcached');
 var _ = require("lodash");
 
 // Rep els filtres i genera les consultes SQL
@@ -135,6 +137,47 @@ function connectaBaseDades() {
 // Iniciem la conexio a mysql
 connectaBaseDades();
 
+// Iniciem la conexio a memcached
+var mem = new Memcached("localhost:11211");
+console.log("Conectat a memcached");
+
+// queryDB es una funcio d'alt nivell que demana les dades de una consulta
+// poden venir tant de memcached com de SQL
+// query es la consulta SQL
+// cb es la funcio (callback) que s'executa quan es te una resposta
+function queryDB (query, cb) {
+  // key es la query sense espais, per que memcached es queixa
+  var key = query.replace(/\s/g, '');
+
+  console.log("queryDB: demanant resposta a memcached");
+  // Demanem a memcached el resultat de la consulta (data)
+  mem.get(key, function (err, data) {
+    // si la esposta esta a cache, la retornem
+    if (data !== undefined) {
+      console.log("queryDB: memcached te la resposta. executant cb");
+      return cb(undefined, data);
+    }
+
+    console.log("queryDB: demanant la resposta a SQL");
+    // en cas de que no tingui la resposta, demanem la resposta a SQL
+    con.query(query, function (err, rows) {
+      if (err)
+        return cb(err);
+
+      console.log("queryDB: guardant resposta a memcached");
+      // guardem la resposta de la consulta SQL a memcached
+      mem.set(key, rows, MEMCACHED_LIFETIME, function (err) {
+        if (err)
+          console.error("queryDB: guardar a memcached ha fallat");
+      });
+
+      console.log("queryDB: executant cb");
+      // retornem la resposta
+      cb(undefined, rows);
+    });
+  })
+}
+
 // Prepara el directori "app" per a recursos estatics
 app.use(express.static("app"));
 //Parseja el json a objectes de javascript per poder treballar amb ells
@@ -170,7 +213,7 @@ app.post("/getCars", function(req, res){
     }
 
     // Executa la consulta SQL
-    con.query(consulta.data, function queryCb(err, rows) {
+    queryDB(consulta.data, function queryCb(err, rows) {
       console.log("Consulta: " + consulta.data);
       if (err) {
         // En cas d'error, imprimirlo per consola
@@ -178,14 +221,14 @@ app.post("/getCars", function(req, res){
         // L'error s'enviara al client dins d'un objecte sota la key "err"
         res.send({err: err});
       } else {
-        console.log(rows);
+        //console.log(rows);
         infoCars.rows = rows;
         estatQuery++;
         estatCheck();
       }
     });
 
-    con.query(consulta.count, function queryCb(err, count) {
+    queryDB(consulta.count, function queryCb(err, count) {
       console.log("ConsultaCount: " + consulta.count);
       if (err) {
         // En cas d'error, imprimirlo per consola
@@ -193,7 +236,7 @@ app.post("/getCars", function(req, res){
         // L'error s'enviara al client dins d'un objecte sota la key "err"
         res.send({err: err});
       } else {
-        console.log(count);
+        //console.log(count);
         infoCars.count = count[0].count;
         estatQuery++;
         estatCheck();
@@ -222,28 +265,28 @@ app.get("/getInfo", function(req, res){
 
   //Una vegada la query ha finalitzat, s'executa una funció que guarda el resultat de la query
   //en info.maker
-  con.query('SELECT * FROM car_maker', function queryCIM(err, rows){
+  queryDB('SELECT * FROM car_maker', function queryCIM(err, rows){
     if (err) {
       // En cas d'error, imprimirlo per consola
       console.error(err);
       // L'error s'enviara al client dins d'un objecte sota la key "err"
       res.send({err: err});
     } else {
-      console.log(rows);
+      //console.log(rows);
       info.maker = rows;
       estatQuery++;
       estatCheck();
     }
   });
 
-  con.query('SELECT * FROM car_color', function queryCIC(err, rows){
+  queryDB('SELECT * FROM car_color', function queryCIC(err, rows){
     if (err) {
       // En cas d'error, imprimirlo per consola
       console.error(err);
       // L'error s'enviara al client dins d'un objecte sota la key "err"
       res.send({err: err});
     } else {
-      console.log(rows);
+      //console.log(rows);
       info.color = rows;
       estatQuery++;
       estatCheck();

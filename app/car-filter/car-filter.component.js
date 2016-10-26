@@ -6,8 +6,6 @@ angular.
       function carFilterController($http, Data, $scope, $window, $timeout) {
         var self = this;
 
-        //$http.defaults.cache = true;
-
         // Variable que representa error de servidor
         self.err = false;
 
