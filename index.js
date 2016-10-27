@@ -17,11 +17,8 @@ function getConsulta (filter) {
   if (filter.offset === undefined) filter.offset = 1;
   if (filter.limit === undefined) filter.limit = 6;
 
-  // Objecte que contindra les dos querys
-  var querys = {};
-
   // Variable on es guarda la consulta general
-  var consulta = "";
+  var consulta = "SELECT * FROM car_model";
 
   // makersSeleccionats conte les id's dels makers seleccionats
   var makersSeleccionats = filter.maker
@@ -68,19 +65,12 @@ function getConsulta (filter) {
     consulta += "color in (" + colorsSeleccionats + ")";
   }
 
-  // Querys.data conte la consulta que demana les dades
-  querys.data = "SELECT * FROM car_model" + consulta;
-
   // Afegir a la consulta limit i offset per a que els cotxes es mostrin de 3 en 3
-  querys.data += " LIMIT " + filter.limit + " OFFSET " + filter.offset;
-  querys.data += ";";
+  consulta += " LIMIT " + filter.limit + " OFFSET " + filter.offset;
+  consulta += ";";
 
-  // Querys.count conte la consulta que retorna el nombre de rows sense limitar (LIMIT i OFFSET)
-  querys.count = "SELECT COUNT(*) as count FROM car_model" + consulta;
-  querys.count += ";";
-
-  // Retornem l'objecte que conte les dos consultes
-  return querys;
+  // Retornem la variable que conte la consulta
+  return consulta;
 }
 
 var app = express();
@@ -250,23 +240,11 @@ app.post("/getCars", function(req, res){
 
     // Hem de fer dos consultes per cada peticio a /getCars
     // infoCars es l'objecte que contindra el resultat de les dues consultes
-    // source es l'objecte que conte l'origien de les dades
-    var infoCars = {
-      source: {}
-    };
-    var estatQuery = 0;
-
-    //Funcio que s'executa sempre que acaba 1 query,
-    //pero només enviará les dades a angular quan hagin finalitzat les 3 querys
-    function estatCheck () {
-      if (estatQuery === 2) {
-        res.send(infoCars);
-      }
-    }
+    var infoCars = {};
 
     // Executa la consulta SQL
-    queryDB(consulta.data, function queryCb(err, rows) {
-      console.log("Consulta: " + consulta.data);
+    queryDB(consulta, function queryCb(err, rows) {
+      console.log("Consulta: " + consulta);
       if (err) {
         // En cas d'error, imprimirlo per consola
         console.error(err);
@@ -275,26 +253,10 @@ app.post("/getCars", function(req, res){
       } else {
         //console.log(rows);
         infoCars.rows = rows;
+        // source es una variable que conte l'origien de les dades
         // assignem l'origen de les dades a l'objecte que retornem al client
-        infoCars.source.data = rows.source;
-        estatQuery++;
-        estatCheck();
-      }
-    });
-
-    queryDB(consulta.count, function queryCb(err, count) {
-      console.log("ConsultaCount: " + consulta.count);
-      if (err) {
-        // En cas d'error, imprimirlo per consola
-        console.error(err);
-        // L'error s'enviara al client dins d'un objecte sota la key "err"
-        res.send({err: err});
-      } else {
-        //console.log(count);
-        infoCars.count = count[0].count;
-        infoCars.source.count = count.source;
-        estatQuery++;
-        estatCheck();
+        infoCars.source = rows.source;
+        res.send(infoCars);
       }
     });
   }

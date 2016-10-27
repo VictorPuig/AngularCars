@@ -51,9 +51,14 @@ angular.
           // retornem true si la pagina es mes alta que la galeria
           // i hi ha cotxes per mostrar
           var hiHaEspai = galleryBottom - $window.innerHeight <= 0;
-          var hiHaCotxes = self.data.count > 0;
-          return hiHaEspai && hiHaCotxes;
+          return hiHaEspai;
         }
+
+        // _.debounce s'espera a que es deixin de produir events per cridar la funcio
+        var debounced = _.debounce(function(){
+          if (checkBottom())
+            getCars();
+        }, 100);
 
         function getCars(reset) {
           // Si no es pasa cap argument, posem reset a false.
@@ -76,10 +81,6 @@ angular.
           // la query demana 6 cotxes. En cas contrari demana 3.
           filter.limit = reset ? 6 : 3;
 
-          // Si el comptador de les imatges que ja es mostren es igual al total
-          // d'imatges surt de la funcio i no en demana mes.
-          if (self.data.count && filter.offset >= self.data.count) return;
-
           // Fa una peticio POST al servidor amb les dades de data.filter
           // en el cos de la peticio
           $http.post("/getCars", filter)
@@ -92,31 +93,32 @@ angular.
               // Concatenem les noves dades de cotxes rebudes a les que ja tenim
               self.data.cars = self.data.cars.concat(res.data.rows);
 
-              self.data.count = res.data.count;
-
-              // Espera a que angular dibuixi la pagina i despres comprova
-              // si hi ha espai suficient per mostrar mes cotxes i els demana.
-              $timeout(function(){
-                if (checkBottom()) getCars();
-              }, 0);
-
+              // Si rebem menys de 3 cotxes per mostrar destruim
+              // l'EventListener d'events "scroll"
+              if (res.data.rows.length < 3) {
+                $window.removeEventListener('scroll', debounced);
+                console.log("scroll listener destruit");
+              } else {
+                // Espera a que angular dibuixi la pagina i despres comprova
+                // si hi ha espai suficient per mostrar mes cotxes i els demana.
+                $timeout(function(){
+                  if (checkBottom()) getCars();
+                }, 0);
+              }
             }
           });
         };
-
-        // addEventListener ens permet especificar una funcio que s'executara
-        // quan es produeixi un event (en aquest cas "scroll")
-        // _.debounce s'espera a que es deixin de produir events per cridar la funcio
-        $window.addEventListener("scroll", _.debounce(function(e){
-          if (checkBottom())
-            getCars();
-        }, 100));
 
         // $watch vigila si el objecte data.filter ha sufert canvis
         $scope.$watch(function () { // funcio que retorna data.filter
           return self.data.filter;
         }, function onChangeFilter () { // funcio que s'executa cada vegada que hi ha canvis
           console.log("Model del filtre canviat");
+
+          // addEventListener ens permet especificar una funcio que s'executara
+          // quan es produeixi un event (en aquest cas "scroll")
+          $window.addEventListener("scroll", debounced);
+          console.log("scroll listener creat");
 
           // Comprovar que el filtre ja s'ha descarrgat i descarreguem els cotxes
           if (!_.isEmpty(self.data.filter))
