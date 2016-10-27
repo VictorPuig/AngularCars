@@ -2,6 +2,8 @@ var MYSQL_RECONNECT_INTERVAL = 1000;
 var MEMCACHED_LIFETIME = 10;
 var MEMCACHED_TIMEOUT = 100;
 
+var ERR_MEMCACHED_DEAD = "Error: memcached dead";
+
 // DEPENDENCIES
 var express = require("express");
 var bodyParser = require("body-parser");
@@ -151,7 +153,13 @@ function queryDB (query, cb) {
   var key = query.replace(/\s/g, '');
 
   var memcachedGetCb = function (err, data) {
-    if (err)
+    var memcachedStatus = true;
+
+    // si err es ERR_MEMCACHED_DEAD, vol dir que memcached
+    // ha trigat massa en contestar i considerem que esta mort
+    if (err === ERR_MEMCACHED_DEAD)
+      memcachedStatus = false;
+    else if (err)
       console.err("queryDB: memcached: ", err);
 
     // si la esposta esta a cache, la retornem
@@ -160,9 +168,8 @@ function queryDB (query, cb) {
       return cb(undefined, data);
     }
 
-    memcachedStatus = !(err === undefined && data === undefined);
-
-    console.log("queryDB: demanant la resposta a SQL");
+    console.log("queryDB: memcached no te la resposta")
+    console.log("queryDB: Demanant la resposta a SQL");
     // en cas de que no tingui la resposta, demanem la resposta a SQL
     con.query(query, function (err, rows) {
       if (err)
@@ -194,7 +201,6 @@ function queryDB (query, cb) {
   mem.get(key, function(err, data) {
     if (aux) {
       aux = false;
-      console.log("queryDB: memcached ha respos: ", err, data);
       //Execucio de memcachedGetCb
       //amb parametres que el servidor memcached ha proporcionat com a respostes
       memcachedGetCb(err, data);
@@ -208,14 +214,12 @@ function queryDB (query, cb) {
     if (aux) {
       aux = false;
       console.error("queryDB: memcached ha trigat massa en respondre!");
-      memcachedGetCb();
+
+      // cridem el callback amb un missatge d'error
+      memcachedGetCb(ERR_MEMCACHED_DEAD);
     }
   }, MEMCACHED_TIMEOUT);
 }
-
-queryDB("select * from car_model;", function(err, data){
-  console.log("err:", err, "data:", data);
-});
 
 // Prepara el directori "app" per a recursos estatics
 app.use(express.static("app"));
