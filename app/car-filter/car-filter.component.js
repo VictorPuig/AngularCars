@@ -49,7 +49,10 @@ angular.
           // fins a la part de baix de la galeria
           var galleryBottom = $window.document.querySelector(".gallery").getBoundingClientRect().bottom;
           // retornem true si la pagina es mes alta que la galeria
-          return galleryBottom - $window.innerHeight <= 0;
+          // i hi ha cotxes per mostrar
+          var hiHaEspai = galleryBottom - $window.innerHeight <= 0;
+          var hiHaCotxes = self.data.count > 0;
+          return hiHaEspai && hiHaCotxes;
         }
 
         function getCars(reset) {
