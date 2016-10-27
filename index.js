@@ -165,6 +165,9 @@ function queryDB (query, cb) {
     // si la resposta esta a cache, la retornem
     if (data !== undefined) {
       console.log("queryDB: memcached te la resposta. executant cb");
+      // establim la propietat source de les dades que es retornen
+      // (origen de les dades (memcached o MySQL))
+      data.source = "memcached";
       return cb(undefined, data);
     }
 
@@ -185,6 +188,9 @@ function queryDB (query, cb) {
       }
 
       console.log("queryDB: executant cb");
+      // establim la propietat source de les dades que es retornen
+      // (origen de les dades (memcached o MySQL))
+      rows.source = "MySQL";
       // retornem la resposta
       cb(undefined, rows);
     });
@@ -243,8 +249,11 @@ app.post("/getCars", function(req, res){
     var consulta = getConsulta(req.body);
 
     // Hem de fer dos consultes per cada peticio a /getCars
-    // infoCars es l'objecte que contindra el resultat de les dues
-    var infoCars = {};
+    // infoCars es l'objecte que contindra el resultat de les dues consultes
+    // source es l'objecte que conte l'origien de les dades
+    var infoCars = {
+      source: {}
+    };
     var estatQuery = 0;
 
     //Funcio que s'executa sempre que acaba 1 query,
@@ -266,6 +275,8 @@ app.post("/getCars", function(req, res){
       } else {
         //console.log(rows);
         infoCars.rows = rows;
+        // assignem l'origen de les dades a l'objecte que retornem al client
+        infoCars.source.data = rows.source;
         estatQuery++;
         estatCheck();
       }
@@ -281,6 +292,7 @@ app.post("/getCars", function(req, res){
       } else {
         //console.log(count);
         infoCars.count = count[0].count;
+        infoCars.source.count = count.source;
         estatQuery++;
         estatCheck();
       }
@@ -297,7 +309,9 @@ app.get("/getInfo", function(req, res){
     res.send({err: {code: "Servidor MySQL offline!"}});
   } else {
     //objecte que conté els valors dels filtres
-    var info = {};
+    var info = {
+      source: {}
+    };
     //variable auxiliar per saber quan les dues querys han finalitzat
     var estatQuery = 0;
 
@@ -320,6 +334,7 @@ app.get("/getInfo", function(req, res){
       } else {
         //console.log(rows);
         info.maker = rows;
+        info.source.maker = rows.source;
         estatQuery++;
         estatCheck();
       }
@@ -334,6 +349,7 @@ app.get("/getInfo", function(req, res){
       } else {
         //console.log(rows);
         info.color = rows;
+        info.source.color = rows.source;
         estatQuery++;
         estatCheck();
       }
