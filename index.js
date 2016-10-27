@@ -20,7 +20,7 @@ function getConsulta (filter) {
   // Objecte que contindra les dos querys
   var querys = {};
 
-  // Variabñe on es guarda la consulta general
+  // Variable on es guarda la consulta general
   var consulta = "";
 
   // makersSeleccionats conte les id's dels makers seleccionats
@@ -162,7 +162,7 @@ function queryDB (query, cb) {
     else if (err)
       console.err("queryDB: memcached: ", err);
 
-    // si la esposta esta a cache, la retornem
+    // si la resposta esta a cache, la retornem
     if (data !== undefined) {
       console.log("queryDB: memcached te la resposta. executant cb");
       return cb(undefined, data);
@@ -242,7 +242,7 @@ app.post("/getCars", function(req, res){
   } else { // Si hi ha conexio, continuem amb la query
     var consulta = getConsulta(req.body);
 
-    // Hem de fer dos consulter per cada peticio a /getCars
+    // Hem de fer dos consultes per cada peticio a /getCars
     // infoCars es l'objecte que contindra el resultat de les dues
     var infoCars = {};
     var estatQuery = 0;
@@ -289,7 +289,7 @@ app.post("/getCars", function(req, res){
 });
 
 //app.get defineix la ruta del servidor
-//(/getInfo) retorna les dades del servidor
+//(/getInfo) retorna les dades del servidor per dibuixar els filtres
 app.get("/getInfo", function(req, res){
   console.log("Peticio informacio");
 
