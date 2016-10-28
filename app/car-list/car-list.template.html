@@ -8,4 +8,8 @@
         <img width="250px" height="200px" ng-src="{{car | getImgUrl}}"></img>
     </div>
   </div>
+  <!-- Si data.final es true, es mostra el missatge (p) -->
+  <div class="nomorecars" ng-if="$ctrl.data.final">
+    <p type="text"> No hi han mes cotxes per mostrar </p>
+  </div>
 </div>

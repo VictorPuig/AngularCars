@@ -29,6 +29,8 @@ angular.
         // filter es un objecte buit que conte maker i color
         self.data.filter = {};
 
+        //Propietat que diu si hi no queden mes cotxes a mostrar (true)
+        self.data.final = false;
         //Angular rep les dades dels filtres de /getInfo
         $http.get('/getInfo').then(function(res){
           //executa una funcio que afegeix l'atribut seleccionat a cada element de self.data.filter.maker
@@ -98,6 +100,7 @@ angular.
               if (res.data.rows.length < 3) {
                 $window.removeEventListener('scroll', debounced);
                 console.log("scroll listener destruit");
+                self.data.final = true;
               } else {
                 // Espera a que angular dibuixi la pagina i despres comprova
                 // si hi ha espai suficient per mostrar mes cotxes i els demana.

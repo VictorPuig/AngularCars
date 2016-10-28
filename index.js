@@ -1,7 +1,7 @@
 var MYSQL_RECONNECT_INTERVAL = 1000;
 var MEMCACHED_LIFETIME = 10;
 var MEMCACHED_TIMEOUT = 100;
-
+var MYSQL_HOST = 'localhost';
 var ERR_MEMCACHED_DEAD = "Error: memcached dead";
 
 // DEPENDENCIES
@@ -91,7 +91,7 @@ function connectaBaseDades() {
 
   // Creem una conexio a la BDD
   con = mysql.createConnection({
-    host: '192.168.1.43',
+    host: MYSQL_HOST,
     user: 'root',
     password: '',
     database: 'cars'
