@@ -4,8 +4,10 @@
     <link rel="stylesheet" type="text/css" href="app.css">
     <title></title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-route.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js"></script>
     <script src="app.module.js"></script>
+    <script src="app.config.js"></script>
     <script src="car-list/car-list.module.js"></script>
     <script src="car-list/car-list.component.js"></script>
     <script src="get-img/get-img.filter.js"></script>
@@ -13,9 +15,10 @@
     <script src="car-filter/car-filter.module.js"></script>
     <script src="car-filter/car-filter.component.js"></script>
     <script src="titlecase-filter/titlecase-filter.filter.js"></script>
+    <script src="car-form/car-form.module.js"></script>
+    <script src="car-form/car-form.component.js"></script>
   </head>
   <body>
-    <car-filter></car-filter>
-    <car-list></car-list>
+    <div ng-view></div>
   </body>
 </html>

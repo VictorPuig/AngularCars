@@ -8,8 +8,11 @@ var ERR_MEMCACHED_DEAD = "Error: memcached dead";
 var express = require("express");
 var bodyParser = require("body-parser");
 var mysql = require("mysql");
+var parallel = require("async").parallel;
 var Memcached = require('memcached');
 var _ = require("lodash");
+var http = require('http');
+var fs = require('fs');
 
 // Rep els filtres i genera les consultes SQL
 function getConsulta (filter) {
@@ -317,6 +320,61 @@ app.get("/getInfo", function(req, res){
       }
     });
   }
+});
+
+//peticio al servidor node al accedir a /addCar
+app.post("/addCar", function (req, res) {
+  //parallel es una funcio que rep una array de funcions, quan s'executen totes,
+  // s'executa el callback de parallel
+  parallel([
+    //query que insereix en la taula un el nou maker que l'usuari ha introduit
+    function (cb) {
+      queryDB("INSERT INTO car_maker(name) VALUES ('" + req.data.maker + "')", function (err) {
+        if (err.code !== "ER_DUP_ENTRY")
+          console.log(err);
+        //funcio que dona parallel per executar una vegada hagi acabat la funcio
+        //per a que ell sapiga quan ha acabat
+        cb(null);
+      });
+    },
+    function (cb) {
+      //query que insereix en la taula un el nou color que l'usuari ha introduit
+      queryDB("INSERT INTO car_color(name) VALUES ('" + req.data.color + "')", function (err) {
+        if (err.code !== "ER_DUP_ENTRY")
+          console.log(err);
+        cb(null);
+      });
+    }
+  ], function (err, results) { // funcio que s'executa quan han acabat totes les demes
+    //query que insereix totes les dades introduides per l'usuari dins de la taula car_model
+    //on tenim totes les dades dels cotxes
+    queryDB("INSERT INTO car_model (maker,name,color) VALUES ((SELECT id from car_maker where name like '" + req.data.maker + "'), '" + req.data.name + "'(SELECT id from car_color where name like '" + req.data.color + "') )", function (err) {
+      //Si retorna error amb valor diferent a ER_DUP_ENTRY, vol dir que ha hagut un error general
+      if (err.code !== "ER_DUP_ENTRY") {
+        console.log(err);
+        //s'envia l'error
+        res.send({err: err});
+      }
+      //Si retorna error amb valor ER_DUP_ENTRY, vol dir que l'usuari intenta introduir
+      //un cotxe ja existent
+      else if(err.code === "ER_DUP_ENTRY") {
+        res.send({errdup: err})
+      }
+      //Si no hi ha cap error, s'avisa al client que l'introduccio de nou cotxe ha tingut exit
+      else {
+        res.send({success: true});
+
+        //fs.createWriteStream crea un stream per escriure un fitxer
+        //se li pasa la ruta de l'arxiu (imatge)
+        var file = fs.createWriteStream("app/img/cars/" + req.data.maker + "_" + req.data.name + "_" + req.data.color + ".jpg");
+        //get remana un recurs al servidor (url) i executa el callback
+        var request = http.get(req.data.url, function(response) {
+          //emmagatzema la resposta al arxiu (imatge)
+          response.pipe(file);
+        });
+      }
+    });
+  });
 });
 
 // Iniciem el servidor

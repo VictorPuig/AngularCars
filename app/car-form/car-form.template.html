@@ -1,0 +1,14 @@
+<div class="form">
+  <div class="submit">
+    <form>
+      Car model <input type="text" ng-model="$ctrl.form.name"></input> <br>
+      Car maker <input type="text" ng-model="$ctrl.form.maker.name"></input> <br>
+      Car color <input type="text" ng-model="$ctrl.form.color.name"></input>
+      <input type="submit" ng-click="sendForm" value="Envia">
+    </form>
+  </div>
+  <div class="list">
+    Makers <select ng-options="maker.name for maker in $ctrl.filter.maker" ng-model="$ctrl.form.maker" ></select>
+    Colors <select ng-options="color.name for color in $ctrl.filter.color" ng-model="$ctrl.form.color"></select>
+  </div>
+</div>
