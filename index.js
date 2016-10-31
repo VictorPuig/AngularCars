@@ -153,7 +153,7 @@ function queryDB (query, cb) {
     if (err === ERR_MEMCACHED_DEAD)
       memcachedStatus = false;
     else if (err)
-      console.err("queryDB: memcached: ", err);
+      console.error("queryDB: memcached: ", err);
 
     // si la resposta esta a cache, la retornem
     if (data !== undefined) {
