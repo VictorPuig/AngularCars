@@ -322,58 +322,92 @@ app.get("/getInfo", function(req, res){
   }
 });
 
-//peticio al servidor node al accedir a /addCar
-app.post("/addCar", function (req, res) {
-  //parallel es una funcio que rep una array de funcions, quan s'executen totes,
-  // s'executa el callback de parallel
-  parallel([
-    //query que insereix en la taula un el nou maker que l'usuari ha introduit
-    function (cb) {
-      queryDB("INSERT INTO car_maker(name) VALUES ('" + req.data.maker + "')", function (err) {
-        if (err.code !== "ER_DUP_ENTRY")
-          console.log(err);
-        //funcio que dona parallel per executar una vegada hagi acabat la funcio
-        //per a que ell sapiga quan ha acabat
-        cb(null);
-      });
-    },
-    function (cb) {
-      //query que insereix en la taula un el nou color que l'usuari ha introduit
-      queryDB("INSERT INTO car_color(name) VALUES ('" + req.data.color + "')", function (err) {
-        if (err.code !== "ER_DUP_ENTRY")
-          console.log(err);
-        cb(null);
+app.post("/addMaker", function (req, res) {
+  console.log(req.data);
+  queryDB("INSERT INTO car_maker(name) VALUES ('" + req.body.name + "')", function (err) {
+    //Si retorna error amb valor ER_DUP_ENTRY, vol dir que l'usuari intenta introduir
+    //un fabricant ja existent
+    if (err && err.code === "ER_DUP_ENTRY") {
+      console.log(err);
+      //envia l'error
+      res.send({
+        errdup: err
       });
     }
-  ], function (err, results) { // funcio que s'executa quan han acabat totes les demes
-    //query que insereix totes les dades introduides per l'usuari dins de la taula car_model
-    //on tenim totes les dades dels cotxes
-    queryDB("INSERT INTO car_model (maker,name,color) VALUES ((SELECT id from car_maker where name like '" + req.data.maker + "'), '" + req.data.name + "'(SELECT id from car_color where name like '" + req.data.color + "') )", function (err) {
-      //Si retorna error amb valor diferent a ER_DUP_ENTRY, vol dir que ha hagut un error general
-      if (err.code !== "ER_DUP_ENTRY") {
-        console.log(err);
-        //s'envia l'error
-        res.send({err: err});
-      }
-      //Si retorna error amb valor ER_DUP_ENTRY, vol dir que l'usuari intenta introduir
-      //un cotxe ja existent
-      else if(err.code === "ER_DUP_ENTRY") {
-        res.send({errdup: err})
-      }
-      //Si no hi ha cap error, s'avisa al client que l'introduccio de nou cotxe ha tingut exit
-      else {
-        res.send({success: true});
+    //Si es error general, l'envia
+    else if(err) {
+      console.log(err)
+      res.send({
+        err: err
+      })
+    }
+    //Sino hi ha error, retorna el registre corresponent al fabricant creat
+    else {
+      queryDB("SELECT * FROM car_maker WHERE name like '" + req.body.name + "'", function(err,rows){
+        res.send(rows[0]);
+      });
+    }
+  });
+});
 
-        //fs.createWriteStream crea un stream per escriure un fitxer
-        //se li pasa la ruta de l'arxiu (imatge)
-        var file = fs.createWriteStream("app/img/cars/" + req.data.maker + "_" + req.data.name + "_" + req.data.color + ".jpg");
-        //get remana un recurs al servidor (url) i executa el callback
-        var request = http.get(req.data.url, function(response) {
-          //emmagatzema la resposta al arxiu (imatge)
-          response.pipe(file);
-        });
-      }
-    });
+//Peticio post per afegir color nou
+app.post("/addColor", function (req, res) {
+  console.log(req.data);
+  //Query per inserir el nou color a la bdd
+  queryDB("INSERT INTO car_color(name) VALUES ('" + req.body.name + "')", function (err) {
+
+    if (err && err.code === "ER_DUP_ENTRY") {
+      console.log(err);
+      res.send({
+        errdup: err
+      });
+    }
+    else if(err) {
+      console.log(err)
+      res.send({
+        err: err
+      })
+    }
+
+    else {
+      queryDB("SELECT * FROM car_color WHERE name like '" + req.body.name + "'", function(err,rows){
+        res.send(rows[0]);
+      });
+    }
+  });
+});
+
+//peticio al servidor node al accedir a /addCar
+app.post("/addCar", function (req, res) {
+  //query que insereix totes les dades introduides per l'usuari dins de la taula car_model
+  //on tenim totes les dades dels cotxes
+  queryDB("INSERT INTO car_model (maker,name,color) VALUES (" + req.body.maker.id + ", '" + req.body.name + "', " + req.body.color.id + ")", function (err) {
+    if (err && err.code === "ER_DUP_ENTRY") {
+      console.log(err);
+      res.send({
+        errdup: err
+      });
+    }
+    //Si retorna error amb valor diferent a ER_DUP_ENTRY, vol dir que ha hagut un error general
+    else if(err) {
+      console.log(err)
+      res.send({
+        err: err
+      })
+    }
+    //Si no hi ha cap error, s'envia al client success: true
+    else {
+      res.send({success: true});
+
+      //fs.createWriteStream crea un stream per escriure un fitxer
+      //se li pasa la ruta de l'arxiu (imatge)
+      var file = fs.createWriteStream("app/img/cars/" + req.body.maker.name + "_" + req.body.name + "_" + req.body.color.name + ".jpg");
+      //get remana un recurs al servidor (url) i executa el callback
+      var request = http.get(req.body.url, function(response) {
+        //emmagatzema la resposta al arxiu (imatge)
+        response.pipe(file);
+      });
+    }
   });
 });
 

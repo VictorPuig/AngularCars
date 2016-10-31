@@ -19,3 +19,8 @@
   clear: both;
   text-align: center;
 }
+
+.float-left {
+  float: left;
+  margin-right: 20px;
+}

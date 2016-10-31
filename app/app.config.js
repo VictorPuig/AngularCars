@@ -12,6 +12,9 @@ angular
         when('/carForm', {
           template: '<car-form></car-form>'
         }).
+        when('/carDetail', {
+          template: '<car-detail></car-detail>'
+        }).
         otherwise('/');
     }
   ]);

@@ -1,14 +1,34 @@
 <div class="form">
-  <div class="submit">
+  <div class="float-left">
     <form>
-      Car model <input type="text" ng-model="$ctrl.form.name"></input> <br>
-      Car maker <input type="text" ng-model="$ctrl.form.maker.name"></input> <br>
-      Car color <input type="text" ng-model="$ctrl.form.color.name"></input>
-      <input type="submit" ng-click="sendForm" value="Envia">
+      <!-- mostra el missatge si falten opcions per seleccionar (shouldDisable()) -->
+      <span ng-show="$ctrl.shouldDisable()">Select the other properties</span><br>
+      Car model <input type="text" ng-model="$ctrl.form.name" placeholder="Model name" ng-disabled="$ctrl.shouldDisable()"></input> <br>
+      Car maker: <span>{{$ctrl.form.maker.name | titleCase}}</span><br>
+      Car color: <span>{{$ctrl.form.color.name | titleCase}}</span><br>
+      Image: <input type="text" ng-model="$ctrl.form.url"></input>
+      <input type="submit" ng-click="$ctrl.sendForm()" value="Envia">
     </form>
+    <a href="/#!"> Back to homepage </a>
   </div>
-  <div class="list">
-    Makers <select ng-options="maker.name for maker in $ctrl.filter.maker" ng-model="$ctrl.form.maker" ></select>
-    Colors <select ng-options="color.name for color in $ctrl.filter.color" ng-model="$ctrl.form.color"></select>
+  <div class="float-left">
+    Makers
+    <ul>
+      <li ng-repeat="maker in $ctrl.filter.maker" ng-click="$ctrl.onClickMaker(maker)">
+        {{maker.name | titleCase}}
+      </li>
+    </ul>
+    <input type="text" ng-model="$ctrl.newMaker">
+    <input type="submit" ng-click="$ctrl.sendMaker()" value="Envia">
+  </div>
+  <div class="float-left">
+    Colors
+    <ul>
+      <li ng-repeat="color in $ctrl.filter.color" ng-click="$ctrl.onClickColor(color)">
+        {{color.name | titleCase}}
+      </li>
+    </ul>
+    <input type="text" ng-model="$ctrl.newColor">
+    <input type="submit" ng-click="$ctrl.sendColor()" value="Envia">
   </div>
 </div>
