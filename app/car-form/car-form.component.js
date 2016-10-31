@@ -10,7 +10,6 @@ angular.
 
         self.filter = _.cloneDeep(Data.filter);
 
-        }
+        }]
       }
-    ]
-  });
+    );
