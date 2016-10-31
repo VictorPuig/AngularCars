@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 24-10-2016 a las 17:16:21
+-- Tiempo de generación: 31-10-2016 a las 17:57:31
 -- Versión del servidor: 5.7.14
 -- Versión de PHP: 5.6.25
 
@@ -19,8 +19,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cars`
 --
-CREATE DATABASE IF NOT EXISTS `cars` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
-USE `cars`;
 
 -- --------------------------------------------------------
 
@@ -42,7 +40,8 @@ INSERT INTO `car_color` (`id`, `name`) VALUES
 (2, 'red'),
 (3, 'white'),
 (4, 'blue'),
-(5, 'silver');
+(5, 'silver'),
+(6, 'cyan');
 
 -- --------------------------------------------------------
 
@@ -62,7 +61,10 @@ CREATE TABLE `car_maker` (
 INSERT INTO `car_maker` (`id`, `name`) VALUES
 (1, 'ford'),
 (2, 'toyota'),
-(3, 'subaru');
+(3, 'subaru'),
+(4, 'renault'),
+(5, 'mazda'),
+(6, 'seat');
 
 -- --------------------------------------------------------
 
@@ -93,37 +95,15 @@ INSERT INTO `car_model` (`id`, `maker`, `name`, `color`) VALUES
 (9, 3, 'xv', 4),
 (10, 3, 'forester', 5),
 (11, 3, 'outback', 1),
-(12, 3, 'brz', 4);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `car_table`
---
-
-CREATE TABLE `car_table` (
-  `name` varchar(8) CHARACTER SET utf8 DEFAULT NULL,
-  `maker` varchar(6) CHARACTER SET utf8 DEFAULT NULL,
-  `color` varchar(6) CHARACTER SET utf8 DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `car_table`
---
-
-INSERT INTO `car_table` (`name`, `maker`, `color`) VALUES
-('focus', 'ford', 'black'),
-('fiesta', 'ford', 'red'),
-('kuga', 'ford', 'white'),
-('mondeo', 'ford', 'black'),
-('rav4', 'toyota', 'blue'),
-('cruiser', 'toyota', 'black'),
-('prius', 'toyota', 'black'),
-('yaris', 'toyota', 'red'),
-('xv', 'subaru', 'blue'),
-('forester', 'subaru', 'silver'),
-('outback', 'subaru', 'black'),
-('brz', 'subaru', 'blue');
+(12, 3, 'brz', 4),
+(13, 4, 'megane', 2),
+(14, 4, 'clio', 5),
+(15, 4, 'twingo', 3),
+(16, 5, 'mazda6', 3),
+(17, 5, 'mazdacx5', 4),
+(18, 5, 'mazdamx5', 2),
+(19, 6, 'ibiza', 3),
+(20, 6, 'toledo', 5);
 
 --
 -- Índices para tablas volcadas
@@ -134,7 +114,8 @@ INSERT INTO `car_table` (`name`, `maker`, `color`) VALUES
 --
 ALTER TABLE `car_color`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `UNIQUE` (`name`);
+  ADD UNIQUE KEY `UNIQUE` (`name`),
+  ADD UNIQUE KEY `name` (`name`);
 
 --
 -- Indices de la tabla `car_maker`
@@ -158,17 +139,17 @@ ALTER TABLE `car_model`
 -- AUTO_INCREMENT de la tabla `car_color`
 --
 ALTER TABLE `car_color`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 --
 -- AUTO_INCREMENT de la tabla `car_maker`
 --
 ALTER TABLE `car_maker`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 --
 -- AUTO_INCREMENT de la tabla `car_model`
 --
 ALTER TABLE `car_model`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
