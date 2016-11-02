@@ -38,6 +38,35 @@ angular.
           self.form.color = color;
         };
 
+        // Funcio que converteix un arrayBuffer en una cadena codificada amb base64
+        // http://stackoverflow.com/a/9458996
+        function arrayBufferToBase64( buffer ) {
+            var binary = '';
+            var bytes = new Uint8Array( buffer );
+            var len = bytes.byteLength;
+            for (var i = 0; i < len; i++) {
+                binary += String.fromCharCode( bytes[ i ] );
+            }
+            return window.btoa( binary );
+        }
+
+        // document.querySelector rep un selector CSS i retorna l'element HTML
+        // .onchange es un callback que s'executa quan la seleccio d'arxiu canvia
+        document.querySelector("input[type=file]").onchange = function (event) {
+            // FileReader ens permet llegir arxius locals
+            var reader = new FileReader();
+
+            // .onload es un callback que s'executa quan l'arxiu s'ha llegit correctament
+            reader.onload = function () {
+              // guarda en self.form.img la imatge convertida a base64
+              self.form.img = arrayBufferToBase64(reader.result);
+            };
+
+            // iniciem la lectura de l'arxiu seleccionat
+            // (en aquest cas: event.target.files[0])
+            reader.readAsArrayBuffer(event.target.files[0]);
+          };
+
         //funcio per a crear el nou fabricant
         self.sendMaker = function () {
           console.log(self.newMaker);

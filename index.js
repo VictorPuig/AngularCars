@@ -13,6 +13,7 @@ var Memcached = require('memcached');
 var _ = require("lodash");
 var http = require('http');
 var fs = require('fs');
+var stream = require("stream");
 
 // Rep els filtres i genera les consultes SQL
 function getConsulta (filter) {
@@ -404,18 +405,26 @@ app.post("/addCar", function (req, res) {
         err: err
       })
     }
-    //Si no hi ha cap error, s'envia al client success: true
-    else {
-      res.send({success: true});
 
-      //fs.createWriteStream crea un stream per escriure un fitxer
-      //se li pasa la ruta de l'arxiu (imatge)
-      var file = fs.createWriteStream("app/img/cars/" + req.body.maker.name + "_" + req.body.name + "_" + req.body.color.name + ".jpg");
-      //get remana un recurs al servidor (url) i executa el callback
-      var request = http.get(req.body.url, function(response) {
+    else {
+      if (!req.body.img) {
+        res.send({err: "Error uploading image! Try again."});
+
+      } else {
+        //fs.createWriteStream crea un stream per escriure un fitxer
+        //se li pasa la ruta de l'arxiu (imatge)
+        var file = fs.createWriteStream("app/img/cars/" + req.body.maker.name + "_" + req.body.name + "_" + req.body.color.name + ".jpg");
+        //creem un buffer (array de bytes) a partir de les dades de la imatge
+        //codificades en base64, que rebem del client
+        var imgBytes = new Buffer(req.body.img, "base64");
         //emmagatzema la resposta al arxiu (imatge)
-        response.pipe(file);
-      });
+        var bufferStream = new stream.PassThrough();
+        bufferStream.end(imgBytes);
+        bufferStream.pipe(file);
+
+        //Si no hi ha cap error, s'envia al client success: true
+        res.send({success: true});
+      }
     }
   });
 });
