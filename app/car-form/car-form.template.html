@@ -7,7 +7,7 @@
       Car maker: <span>{{$ctrl.form.maker.name | titleCase}}</span><br>
       Car color: <span>{{$ctrl.form.color.name | titleCase}}</span><br>
       Image: <input type="text" ng-model="$ctrl.form.url"></input>
-      <input type="submit" ng-click="$ctrl.sendForm()" value="Envia">
+      <input type="submit" ng-disabled="$ctrl.shouldDisable()" ng-click="$ctrl.sendForm()" value="Submit">
     </form>
     <a href="/#!"> Back to homepage </a>
   </div>
@@ -19,7 +19,7 @@
       </li>
     </ul>
     <input type="text" ng-model="$ctrl.newMaker">
-    <input type="submit" ng-click="$ctrl.sendMaker()" value="Envia">
+    <input type="submit" ng-click="$ctrl.sendMaker()" value="Submit">
   </div>
   <div class="float-left">
     Colors
@@ -29,6 +29,6 @@
       </li>
     </ul>
     <input type="text" ng-model="$ctrl.newColor">
-    <input type="submit" ng-click="$ctrl.sendColor()" value="Envia">
+    <input type="submit" ng-click="$ctrl.sendColor()" value="Submit">
   </div>
 </div>
