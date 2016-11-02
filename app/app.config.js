@@ -12,7 +12,9 @@ angular
         when('/carForm', {
           template: '<car-form></car-form>'
         }).
-        when('/carDetail', {
+        // :<nom> defineix una variable que angular omplira a partir de la url
+        // a la que podrem accedir al controlador amb $routeParams
+        when('/carDetail/:carId', {
           template: '<car-detail></car-detail>'
         }).
         otherwise('/');
