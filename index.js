@@ -137,6 +137,9 @@ connectaBaseDades();
 var mem = new Memcached("localhost:11211");
 console.log("Conectat a memcached");
 
+// Variable que assigna un numero a cada query per fer un seguiment
+var queryDBIdx = 0;
+
 // queryDB es una funcio d'alt nivell que demana les dades de una consulta
 // poden venir tant de memcached com de SQL
 // query es la consulta SQL
@@ -144,6 +147,10 @@ console.log("Conectat a memcached");
 function queryDB (query, cb) {
   // key es la query sense espais, per que memcached es queixa
   var key = query.replace(/\s/g, '');
+
+  var thisIdx = queryDBIdx++;
+
+  console.log("queryDB[" + thisIdx + "]: " + query);
 
   var memcachedGetCb = function (err, data) {
     var memcachedStatus = true;
@@ -153,34 +160,34 @@ function queryDB (query, cb) {
     if (err === ERR_MEMCACHED_DEAD)
       memcachedStatus = false;
     else if (err)
-      console.error("queryDB: memcached: ", err);
+      console.error("queryDB[" + thisIdx + "]: memcached: ", err);
 
     // si la resposta esta a cache, la retornem
     if (data !== undefined) {
-      console.log("queryDB: memcached te la resposta. executant cb");
+      console.log("queryDB[" + thisIdx + "]: memcached te la resposta. executant cb");
       // establim la propietat source de les dades que es retornen
       // (origen de les dades (memcached o MySQL))
       data.source = "memcached";
       return cb(undefined, data);
     }
 
-    console.log("queryDB: memcached no te la resposta")
-    console.log("queryDB: Demanant la resposta a SQL");
+    console.log("queryDB[" + thisIdx + "]: memcached no te la resposta")
+    console.log("queryDB[" + thisIdx + "]: Demanant la resposta a SQL");
     // en cas de que no tingui la resposta, demanem la resposta a SQL
     con.query(query, function (err, rows) {
       if (err)
         return cb(err);
 
       if (memcachedStatus) {
-        console.log("queryDB: guardant resposta a memcached");
+        console.log("queryDB[" + thisIdx + "]: guardant resposta a memcached");
         // guardem la resposta de la consulta SQL a memcached
         mem.set(key, rows, MEMCACHED_LIFETIME, function (err) {
           if (err)
-            console.error("queryDB: guardar a memcached ha fallat");
+            console.error("queryDB[" + thisIdx + "]: guardar a memcached ha fallat");
         });
       }
 
-      console.log("queryDB: executant cb");
+      console.log("queryDB[" + thisIdx + "]: executant cb");
       // establim la propietat source de les dades que es retornen
       // (origen de les dades (memcached o MySQL))
       rows.source = "MySQL";
@@ -191,7 +198,7 @@ function queryDB (query, cb) {
 
   var aux = true;
 
-  console.log("queryDB: demanant resposta a memcached");
+  console.log("queryDB[" + thisIdx + "]: demanant resposta a memcached");
   // Demanem a memcached el resultat de la consulta (data)
   //mem.get es una funcio que pregunta al servidor memcached per la key ( query )
   //Si memcached li respon en menys temps del especificat en el timeout
@@ -212,7 +219,7 @@ function queryDB (query, cb) {
   setTimeout(function () {
     if (aux) {
       aux = false;
-      console.error("queryDB: memcached ha trigat massa en respondre!");
+      console.error("queryDB[" + thisIdx + "]: memcached ha trigat massa en respondre!");
 
       // cridem el callback amb un missatge d'error
       memcachedGetCb(ERR_MEMCACHED_DEAD);
@@ -247,7 +254,6 @@ app.post("/getCars", function(req, res){
 
     // Executa la consulta SQL
     queryDB(consulta, function queryCb(err, rows) {
-      console.log("Consulta: " + consulta);
       if (err) {
         // En cas d'error, imprimirlo per consola
         console.error(err);
@@ -323,7 +329,8 @@ app.get("/getInfo", function(req, res){
 });
 
 app.post("/addMaker", function (req, res) {
-  console.log(req.data);
+  // console.log(req.data);
+  req.body.name = req.body.name.toLowerCase();
   queryDB("INSERT INTO car_maker(name) VALUES ('" + req.body.name + "')", function (err) {
     //Si retorna error amb valor ER_DUP_ENTRY, vol dir que l'usuari intenta introduir
     //un fabricant ja existent
@@ -352,7 +359,8 @@ app.post("/addMaker", function (req, res) {
 
 //Peticio post per afegir color nou
 app.post("/addColor", function (req, res) {
-  console.log(req.data);
+  //console.log(req.data);
+  req.body.name = req.body.name.toLowerCase();
   //Query per inserir el nou color a la bdd
   queryDB("INSERT INTO car_color(name) VALUES ('" + req.body.name + "')", function (err) {
 
@@ -379,6 +387,7 @@ app.post("/addColor", function (req, res) {
 
 //peticio al servidor node al accedir a /addCar
 app.post("/addCar", function (req, res) {
+  req.body.name = req.body.name.toLowerCase();
   //query que insereix totes les dades introduides per l'usuari dins de la taula car_model
   //on tenim totes les dades dels cotxes
   queryDB("INSERT INTO car_model (maker,name,color) VALUES (" + req.body.maker.id + ", '" + req.body.name + "', " + req.body.color.id + ")", function (err) {
