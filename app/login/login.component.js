@@ -4,8 +4,8 @@ angular.
     templateUrl: 'login/login.template.html',
     //Utilitza el factory per aixo s'inclou la dependencia
     //Com l'objecte Data (factory) es unic, aquesta funcio mostra la llista de cotxes ja filtrats per el controlador car-filter
-    controller: ['Data', "$http", "$location", "Auth",
-      function loginController(Data, $http, $location, Auth) {
+    controller: ["$http", "$location", "Auth", "$route",
+      function loginController($http, $location, Auth, $route) {
         var self = this;
 
       self.sendUser = function () {
@@ -21,7 +21,25 @@ angular.
             $location.path('/');
           }
         });
-      }
+      };
+
+      self.sendNewUser = function () {
+        $http.post("/signup",self.newUser)
+        .then(function(res){
+          if (res.data.err) {
+            alert(res.data.err);
+          }
+          else if (res.data.errdup) {
+            alert("User already exists!")
+          }
+          else {
+            alert("User succesfully create. You can logn now");
+            //$route.reload() refresca la pagina actual
+            //usuari creat correctament, torna a fer login per entrar
+            $route.reload();
+          }
+        });
+      };
     }]
   }
 );
