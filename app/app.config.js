@@ -17,6 +17,9 @@ angular
         when('/carDetail/:carId', {
           template: '<car-detail></car-detail>'
         }).
+        when('/login', {
+          template: '<login></login>'
+        }).
         otherwise('/');
     }
   ]);
