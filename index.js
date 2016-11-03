@@ -3,6 +3,7 @@ var MEMCACHED_LIFETIME = 10;
 var MEMCACHED_TIMEOUT = 100;
 var MYSQL_HOST = 'localhost';
 var ERR_MEMCACHED_DEAD = "Error: memcached dead";
+var ERR_MYSQL_DUPLICATE_ENTRY = "ER_DUP_ENTRY";
 
 // DEPENDENCIES
 var express = require("express");
@@ -238,6 +239,49 @@ app.get("/", function(req, res){
   res.sendFile(__dirname + "/index.html");
 });
 
+// Ruta per fer login
+app.post("/login", function (req, res) {
+  console.log("Peticio /login");
+
+  var username = req.body.username,
+      password = req.body.password;
+
+  // Consulta que selecciona el registre de la taula users que correspon amb l'usuari i la password
+  queryDB("SELECT id, username FROM users WHERE username LIKE '" + username + "' AND password LIKE '" + password + "'", function (err, rows) {
+    if (err)
+      console.log(err);
+
+    // Si la longitud de resultats es mes gran que 0 vol dir que l'usuari existeix
+    if (rows.length > 0)
+      res.send({success: true, user: rows[0]});
+
+    else
+      res.send({err: "User does not exist! Try signing up."});
+  })
+});
+
+// Ruta per crear usuaris nous
+app.post("/signup", function (req, res) {
+  console.log("Peticio /signup");
+
+  var username = req.body.username,
+      password = req.body.password;
+
+  // Query que insereix el nou usuari a la taula users
+  queryDB("INSERT INTO users (username, password) VALUES ('" + username + "', '" + password + "')", function (err, rows) {
+    // Si l'usuari esta duplicat li fem saber al client
+    if (err && err.code === ERR_MYSQL_DUPLICATE_ENTRY)
+      res.send({errdup: err});
+
+    // Qualsevol altre error tambe l'enviem al client
+    else if (err)
+      res.send({err: err});
+
+    else
+      res.send({success: true});
+  })
+});
+
 // Ruta getCars retorna les dades de la crida de la BDD en JSON
 app.post("/getCars", function(req, res){
   console.log("Peticio /getCars");
@@ -333,9 +377,9 @@ app.post("/addMaker", function (req, res) {
   // console.log(req.data);
   req.body.name = req.body.name.toLowerCase();
   queryDB("INSERT INTO car_maker(name) VALUES ('" + req.body.name + "')", function (err) {
-    //Si retorna error amb valor ER_DUP_ENTRY, vol dir que l'usuari intenta introduir
+    //Si retorna error amb valor ERR_MYSQL_DUPLICATE_ENTRY, vol dir que l'usuari intenta introduir
     //un fabricant ja existent
-    if (err && err.code === "ER_DUP_ENTRY") {
+    if (err && err.code === ERR_MYSQL_DUPLICATE_ENTRY) {
       console.log(err);
       //envia l'error
       res.send({
@@ -365,7 +409,7 @@ app.post("/addColor", function (req, res) {
   //Query per inserir el nou color a la bdd
   queryDB("INSERT INTO car_color(name) VALUES ('" + req.body.name + "')", function (err) {
 
-    if (err && err.code === "ER_DUP_ENTRY") {
+    if (err && err.code === ERR_MYSQL_DUPLICATE_ENTRY) {
       console.log(err);
       res.send({
         errdup: err
@@ -392,13 +436,13 @@ app.post("/addCar", function (req, res) {
   //query que insereix totes les dades introduides per l'usuari dins de la taula car_model
   //on tenim totes les dades dels cotxes
   queryDB("INSERT INTO car_model (maker,name,color) VALUES (" + req.body.maker.id + ", '" + req.body.name + "', " + req.body.color.id + ")", function (err) {
-    if (err && err.code === "ER_DUP_ENTRY") {
+    if (err && err.code === ERR_MYSQL_DUPLICATE_ENTRY) {
       console.log(err);
       res.send({
         errdup: err
       });
     }
-    //Si retorna error amb valor diferent a ER_DUP_ENTRY, vol dir que ha hagut un error general
+    //Si retorna error amb valor diferent a ERR_MYSQL_DUPLICATE_ENTRY, vol dir que ha hagut un error general
     else if(err) {
       console.log(err)
       res.send({
