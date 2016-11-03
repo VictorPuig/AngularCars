@@ -3,10 +3,10 @@
     <form>
       <!-- mostra el missatge si falten opcions per seleccionar (shouldDisable()) -->
       <span ng-show="$ctrl.shouldDisable()">Select the other properties</span><br>
-      Car model <input type="text" ng-model="$ctrl.form.name" placeholder="Model name" ng-disabled="$ctrl.shouldDisable()"></input> <br>
+      Car model <input type="text" ng-model="$ctrl.form.name" placeholder="Model name"></input> <br>
       Car maker: <span>{{$ctrl.form.maker.name | titleCase}}</span><br>
       Car color: <span>{{$ctrl.form.color.name | titleCase}}</span><br>
-      Image: <input type="file" ng-model="$ctrl.form.file"></input>
+      Image: <input type="file"></input>
       <input type="submit" ng-disabled="$ctrl.shouldDisable()" ng-click="$ctrl.sendForm()" value="Submit">
     </form>
     <a href="/#!"> Back to homepage </a>

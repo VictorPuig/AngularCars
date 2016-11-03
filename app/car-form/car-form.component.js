@@ -14,17 +14,22 @@ angular.
     templateUrl: 'car-form/car-form.template.html',
     //Utilitza el factory per aixó s'inclou la dependencia
     //Com l'objecte Data (factory) es unic, aquesta funcio mostra la llista de cotxes ja filtrats per el controlador car-filter
-    controller: ['Data', "$http",
-      function carListController(Data, $http) {
+    controller: ['Data', "$http", "$scope",
+      function carListController(Data, $http, $scope) {
         var self = this;
 
        self.filter = Data.filter;
 
         self.form = _.cloneDeep(DEFAULT_FORM);
 
-        //funcio que retorna true si l'usuari no ha escollit cap maker ni color.
+        //funcio que retorna true si l'usuari no ha escollit totes les propietats.
         self.shouldDisable = function () {
-          return self.form.maker.id === undefined || self.form.color.id === undefined;
+          return (
+            self.form.maker.id === undefined ||
+            self.form.color.id === undefined ||
+            self.form.name === undefined ||
+            self.form.img === undefined
+          );
         }
         //funcio que s'executa quan es fa clic a un maker de la llista
         //asigna al maker del formulari, el maker que s'ha clickat
@@ -60,6 +65,9 @@ angular.
             reader.onload = function () {
               // guarda en self.form.img la imatge convertida a base64
               self.form.img = arrayBufferToBase64(reader.result);
+
+              // $scope.$apply() es una funcio que fa que angular comprovi els models
+              $scope.$apply();
             };
 
             // iniciem la lectura de l'arxiu seleccionat
