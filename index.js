@@ -254,7 +254,7 @@ function queryDB (query, skipMemcahed, cb) {
 app.use(bodyParser.json());
 
 if (!NO_ROOT) {
-  console.log("Executant com a webservice");
+  console.log("Executant com a standalone");
 
   // Prepara el directori "app" per a recursos estatics
   app.use(express.static("app"));
@@ -263,6 +263,8 @@ if (!NO_ROOT) {
   app.get("/", function(req, res){
     res.sendFile(__dirname + "/index.html");
   });
+} else {
+  console.log("Executant com a webservice");
 }
 
 // Ruta per fer login
