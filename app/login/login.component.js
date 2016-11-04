@@ -17,8 +17,15 @@ angular.
             //Auth es un factory que executa una funcio (setUser)
             //que retorna l'objecte del factory
             Auth.setUser(res.data.user);
-            //envia al usuari a la pagina principal
-            $location.path('/');
+            //Si existeix Auth.path, canvia la ruta actual del navegador per Auth.path
+            if (Auth.path) {
+              $location.path(Auth.path);
+              Auth.path = null;
+            }
+            else {
+              //ruta per defecte
+              $location.path("/");
+            }
           }
         });
       };

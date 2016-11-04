@@ -33,7 +33,8 @@ app.factory('Auth', function(){
     //Funcio que posa user a null per a fer logout
     logOut: function () {
       user = null;
-    }
+    },
+    path: null
   }
 });
 
@@ -46,6 +47,8 @@ app.run(['$rootScope', '$location', 'Auth', function ($rootScope, $location, Aut
     $rootScope.$on('$routeChangeStart', function (event) {
       //Guardar la ruta actual de la pagina
       var path = $location.path();
+      //Auth.path pren el valor de path (ruta a la que estem canviant)
+      Auth.path = path;
       //funcio que busca dins l'array PROTECTED_PATHS, els elements que concordin
       //amb la ruta actual i la guarda en isProtected que conte un element de l'array
       var isProtected = PROTECTED_PATHS.find(function (pp) {return pp === path});
@@ -53,6 +56,7 @@ app.run(['$rootScope', '$location', 'Auth', function ($rootScope, $location, Aut
       //Prevenim el canvi de ruta i enviem a l'usuari a la pagina de login
       if (isProtected && !Auth.isLoggedIn()) {
         event.preventDefault();
+        //per despres redirigir a l'usuari a la ruta on volia anar abans de fer login
         $location.path('/login');
       }
     });
