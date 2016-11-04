@@ -18,6 +18,7 @@ var http = require('http');
 var fs = require('fs');
 var stream = require("stream");
 var cors = require("cors");
+var config = require("./config.json");
 
 // Rep els filtres i genera les consultes SQL
 function getConsulta (filter) {
@@ -99,7 +100,7 @@ function connectaBaseDades() {
 
   // Creem una conexio a la BDD
   con = mysql.createConnection({
-    host: MYSQL_HOST,
+    host: config.mysql.ip,
     user: 'root',
     password: '',
     database: 'cars'
@@ -139,7 +140,7 @@ function connectaBaseDades() {
 connectaBaseDades();
 
 // Iniciem la conexio a memcached
-var mem = new Memcached("localhost:11211");
+var mem = new Memcached(config.memcached.ip);
 console.log("Conectat a memcached");
 
 // Variable que assigna un numero a cada query per fer un seguiment
