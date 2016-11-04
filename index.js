@@ -17,6 +17,7 @@ var _ = require("lodash");
 var http = require('http');
 var fs = require('fs');
 var stream = require("stream");
+var cors = require("cors");
 
 // Rep els filtres i genera les consultes SQL
 function getConsulta (filter) {
@@ -265,6 +266,9 @@ if (!NO_ROOT) {
   });
 } else {
   console.log("Executant com a webservice");
+
+  // Afegeix capcaleres CORS per que l'apache pugui fer peticions
+  app.use(cors());
 }
 
 // Ruta per fer login
