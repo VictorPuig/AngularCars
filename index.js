@@ -5,6 +5,8 @@ var MYSQL_HOST = '192.168.1.43';
 var ERR_MEMCACHED_DEAD = "Error: memcached dead";
 var ERR_MYSQL_DUPLICATE_ENTRY = "ER_DUP_ENTRY";
 
+var NO_ROOT = process.argv[2] === "--no-root";
+
 // DEPENDENCIES
 var express = require("express");
 var bodyParser = require("body-parser");
@@ -248,15 +250,20 @@ function queryDB (query, skipMemcahed, cb) {
   }
 }
 
-// Prepara el directori "app" per a recursos estatics
-app.use(express.static("app"));
 //Parseja el json a objectes de javascript per poder treballar amb ells
 app.use(bodyParser.json());
 
-// Ruta root
-app.get("/", function(req, res){
-  res.sendFile(__dirname + "/index.html");
-});
+if (!NO_ROOT) {
+  console.log("Executant com a webservice");
+
+  // Prepara el directori "app" per a recursos estatics
+  app.use(express.static("app"));
+
+  // Ruta root
+  app.get("/", function(req, res){
+    res.sendFile(__dirname + "/index.html");
+  });
+}
 
 // Ruta per fer login
 app.post("/login", function (req, res) {
