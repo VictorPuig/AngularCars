@@ -8,9 +8,11 @@ var app = angular.module('carApp', [
 ]);
 
 //Factory crea un objecte únic (Singeltone) per compartir dades entre controladors
+// baseUrl es la direccio del servidor node. Es genera dinamicament a partir de
+// la url del navegador
 app.factory("Data", function () {
   return {
-    baseUrl: "http://localhost:8080"
+    baseUrl: "http://" + window.location.hostname + ":8080"
   };
 });
 

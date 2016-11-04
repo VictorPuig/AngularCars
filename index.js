@@ -254,7 +254,17 @@ function queryDB (query, skipMemcahed, cb) {
 //Parseja el json a objectes de javascript per poder treballar amb ells
 app.use(bodyParser.json());
 
-if (!NO_ROOT) {
+// Si node s'executa amb `--no-root`, no es defineix la ruta `/` ni les rutes estatiques
+// es apache qui s'encarrega de donar els recursos estatics (HTML, JS, CSS...)
+if (NO_ROOT) {
+  console.log("Executant com a webservice");
+
+  // Afegeix capcaleres CORS per que l'apache pugui fer peticions
+  app.use(cors());
+
+// Per defecte declarem la ruta arrel `/` i les rutes estatiques
+// node s'encarrega de distribuir HTML, JS, CSS...
+} else {
   console.log("Executant com a standalone");
 
   // Prepara el directori "app" per a recursos estatics
@@ -264,11 +274,6 @@ if (!NO_ROOT) {
   app.get("/", function(req, res){
     res.sendFile(__dirname + "/index.html");
   });
-} else {
-  console.log("Executant com a webservice");
-
-  // Afegeix capcaleres CORS per que l'apache pugui fer peticions
-  app.use(cors());
 }
 
 // Ruta per fer login
