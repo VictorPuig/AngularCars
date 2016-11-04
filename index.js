@@ -145,8 +145,16 @@ var queryDBIdx = 0;
 // queryDB es una funcio d'alt nivell que demana les dades de una consulta
 // poden venir tant de memcached com de SQL
 // query es la consulta SQL
+// skipMemcahed es un boolean que indica si ens volem saltar el memcached
 // cb es la funcio (callback) que s'executa quan es te una resposta
-function queryDB (query, cb) {
+function queryDB (query, skipMemcahed, cb) {
+  // Si el cb no esta a la tercera posicio, vol dir que esta a la segona
+  // per tant reordenem els parametres per a que el callback estigui a la tercera posicio
+  if (!cb) {
+    cb = skipMemcahed;
+    skipMemcahed = false;
+  }
+
   // key es la query sense espais, per que memcached es queixa
   var key = query.replace(/\s/g, '');
 
@@ -161,6 +169,8 @@ function queryDB (query, cb) {
     // ha trigat massa en contestar i considerem que esta mort
     if (err === ERR_MEMCACHED_DEAD)
       memcachedStatus = false;
+
+    // qualsevol altre error
     else if (err)
       console.error("queryDB[" + thisIdx + "]: memcached: ", err);
 
@@ -173,14 +183,17 @@ function queryDB (query, cb) {
       return cb(undefined, data);
     }
 
-    console.log("queryDB[" + thisIdx + "]: memcached no te la resposta")
+    if (!skipMemcahed)
+      console.log("queryDB[" + thisIdx + "]: memcached no te la resposta");
+
     console.log("queryDB[" + thisIdx + "]: Demanant la resposta a SQL");
     // en cas de que no tingui la resposta, demanem la resposta a SQL
     con.query(query, function (err, rows) {
       if (err)
         return cb(err);
 
-      if (memcachedStatus) {
+      // Si memcached esta viu, i no el saltem, guardem les dades de sql a memcached
+      if (memcachedStatus && !skipMemcahed) {
         console.log("queryDB[" + thisIdx + "]: guardant resposta a memcached");
         // guardem la resposta de la consulta SQL a memcached
         mem.set(key, rows, MEMCACHED_LIFETIME, function (err) {
@@ -198,35 +211,41 @@ function queryDB (query, cb) {
     });
   };
 
-  var aux = true;
+  // Si saltem memcached executem el callback sense parametres directament
+  if (skipMemcahed) {
+    return memcachedGetCb();
+  }
+  else {
+    var aux = true;
 
-  console.log("queryDB[" + thisIdx + "]: demanant resposta a memcached");
-  // Demanem a memcached el resultat de la consulta (data)
-  //mem.get es una funcio que pregunta al servidor memcached per la key ( query )
-  //Si memcached li respon en menys temps del especificat en el timeout
-  //executa la funcio memcachedGetCb que continua el proces de la query
-  //marca aux a false perque no es torni a executar la funcio memcachedGetCb
-  mem.get(key, function(err, data) {
-    if (aux) {
-      aux = false;
-      //Execucio de memcachedGetCb
-      //amb parametres que el servidor memcached ha proporcionat com a respostes
-      memcachedGetCb(err, data);
-    }
-  });
+    console.log("queryDB[" + thisIdx + "]: demanant resposta a memcached");
+    // Demanem a memcached el resultat de la consulta (data)
+    //mem.get es una funcio que pregunta al servidor memcached per la key ( query )
+    //Si memcached li respon en menys temps del especificat en el timeout
+    //executa la funcio memcachedGetCb que continua el proces de la query
+    //marca aux a false perque no es torni a executar la funcio memcachedGetCb
+    mem.get(key, function(err, data) {
+      if (aux) {
+        aux = false;
+        //Execucio de memcachedGetCb
+        //amb parametres que el servidor memcached ha proporcionat com a respostes
+        memcachedGetCb(err, data);
+      }
+    });
 
-  //Si ha passat el temps especificat en el timeot i mem.get no ha rebut resposta
-  // del servidor memcached, executa la funcio memcachedGetCb sense parametres
-  // per continuar el proces
-  setTimeout(function () {
-    if (aux) {
-      aux = false;
-      console.error("queryDB[" + thisIdx + "]: memcached ha trigat massa en respondre!");
+    //Si ha passat el temps especificat en el timeot i mem.get no ha rebut resposta
+    // del servidor memcached, executa la funcio memcachedGetCb sense parametres
+    // per continuar el proces
+    setTimeout(function () {
+      if (aux) {
+        aux = false;
+        console.error("queryDB[" + thisIdx + "]: memcached ha trigat massa en respondre!");
 
-      // cridem el callback amb un missatge d'error
-      memcachedGetCb(ERR_MEMCACHED_DEAD);
-    }
-  }, MEMCACHED_TIMEOUT);
+        // cridem el callback amb un missatge d'error
+        memcachedGetCb(ERR_MEMCACHED_DEAD);
+      }
+    }, MEMCACHED_TIMEOUT);
+  }
 }
 
 // Prepara el directori "app" per a recursos estatics
@@ -268,7 +287,7 @@ app.post("/signup", function (req, res) {
       password = req.body.password;
 
   // Query que insereix el nou usuari a la taula users
-  queryDB("INSERT INTO users (username, password) VALUES ('" + username + "', '" + password + "')", function (err, rows) {
+  queryDB("INSERT INTO users (username, password) VALUES ('" + username + "', '" + password + "')", true, function (err, rows) {
     // Si l'usuari esta duplicat li fem saber al client
     if (err && err.code === ERR_MYSQL_DUPLICATE_ENTRY)
       res.send({errdup: err});
@@ -376,7 +395,7 @@ app.get("/getInfo", function(req, res){
 app.post("/addMaker", function (req, res) {
   // console.log(req.data);
   req.body.name = req.body.name.toLowerCase();
-  queryDB("INSERT INTO car_maker(name) VALUES ('" + req.body.name + "')", function (err) {
+  queryDB("INSERT INTO car_maker(name) VALUES ('" + req.body.name + "')", true, function (err) {
     //Si retorna error amb valor ERR_MYSQL_DUPLICATE_ENTRY, vol dir que l'usuari intenta introduir
     //un fabricant ja existent
     if (err && err.code === ERR_MYSQL_DUPLICATE_ENTRY) {
@@ -407,7 +426,7 @@ app.post("/addColor", function (req, res) {
   //console.log(req.data);
   req.body.name = req.body.name.toLowerCase();
   //Query per inserir el nou color a la bdd
-  queryDB("INSERT INTO car_color(name) VALUES ('" + req.body.name + "')", function (err) {
+  queryDB("INSERT INTO car_color(name) VALUES ('" + req.body.name + "')", true, function (err) {
 
     if (err && err.code === ERR_MYSQL_DUPLICATE_ENTRY) {
       console.log(err);
@@ -435,7 +454,7 @@ app.post("/addCar", function (req, res) {
   req.body.name = req.body.name.toLowerCase();
   //query que insereix totes les dades introduides per l'usuari dins de la taula car_model
   //on tenim totes les dades dels cotxes
-  queryDB("INSERT INTO car_model (maker,name,color) VALUES (" + req.body.maker.id + ", '" + req.body.name + "', " + req.body.color.id + ")", function (err) {
+  queryDB("INSERT INTO car_model (maker,name,color) VALUES (" + req.body.maker.id + ", '" + req.body.name + "', " + req.body.color.id + ")", true, function (err) {
     if (err && err.code === ERR_MYSQL_DUPLICATE_ENTRY) {
       console.log(err);
       res.send({
