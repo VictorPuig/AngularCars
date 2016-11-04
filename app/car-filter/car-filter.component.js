@@ -41,7 +41,7 @@ angular.
         //Propietat que diu si hi no queden mes cotxes a mostrar (true)
         self.data.final = false;
         //Angular rep les dades dels filtres de /getInfo
-        $http.get('/getInfo').then(function(res){
+        $http.get(Data.baseUrl + '/getInfo').then(function(res){
           //executa una funcio que afegeix l'atribut seleccionat a cada element de self.data.filter.maker
           self.data.filter.maker = res.data.maker.map(function(el){
             //s'inicialitza el valor a false
@@ -94,7 +94,7 @@ angular.
 
           // Fa una peticio POST al servidor amb les dades de data.filter
           // en el cos de la peticio
-          $http.post("/getCars", filter)
+          $http.post(Data.baseUrl + "/getCars", filter)
           .then(function(res){
             if (res.data.err) { // Si l'objecte que rebem (json servidor) conte err
                                 // l'imprimim per consola i l'assignem a self.err

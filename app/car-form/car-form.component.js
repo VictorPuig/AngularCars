@@ -79,7 +79,7 @@ angular.
         self.sendMaker = function () {
           console.log(self.newMaker);
           //enviem al servidor el nom del nou fabricant
-          $http.post("/addMaker", {name: self.newMaker})
+          $http.post(Data.baseUrl + "/addMaker", {name: self.newMaker})
             .then(function(res){
               console.log(res);
               if (res.data.errdup) {
@@ -103,7 +103,7 @@ angular.
 
         self.sendColor = function () {
           console.log(self.newColor);
-          $http.post("/addColor", {name: self.newColor})
+          $http.post(Data.baseUrl + "/addColor", {name: self.newColor})
             .then(function(res){
               console.log(res);
               if (res.data.errdup) {
@@ -123,7 +123,7 @@ angular.
 
         //funcio que crea un nou model de cotxe
         self.sendForm = function () {
-          $http.post("/addCar", self.form)
+          $http.post(Data.baseUrl + "/addCar", self.form)
             .then(function(res){
               console.log(res);
               if (res.data.errdup) {
