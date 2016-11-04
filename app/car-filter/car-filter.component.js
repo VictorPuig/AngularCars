@@ -2,8 +2,8 @@ angular.
   module('carFilter').
   component('carFilter', {
     templateUrl: 'car-filter/car-filter.template.html',
-    controller: ['$http', 'Data', "$scope", "$window", "$timeout",
-      function carFilterController($http, Data, $scope, $window, $timeout) {
+    controller: ['$http', 'Data', "$scope", "$window", "$timeout", "Auth",
+      function carFilterController($http, Data, $scope, $window, $timeout, Auth) {
         var self = this;
 
         // Variable que representa error de servidor
@@ -19,6 +19,15 @@ angular.
             self.err = false; // Ja hem tractat l'error, assignem false
           }
         });
+
+        self.auth = Auth;
+
+        // Funcio que s'executa quan es fa click al link logOut
+        // S'encarrega de fer logout de l'usuari
+        self.onClickLogout = function (e) {
+          e.preventDefault();
+          self.auth.logOut();
+        };
 
         // Objecte on s'emmagatzema tota la informacio i l'estat de l'app
         self.data = Data;

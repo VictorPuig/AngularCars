@@ -13,6 +13,7 @@
       </div>
     </div>
     <a href="#!/carForm">Add a new car</a> <br>
-    <a href="#!/login">Log in</a>
+    <a ng-hide="$ctrl.auth.isLoggedIn()" href="#!/login">Log in</a>
+    <a ng-show="$ctrl.auth.isLoggedIn()" href="#" ng-click="$ctrl.onClickLogout($event)">Log out</a>
   </p>
 </div>
