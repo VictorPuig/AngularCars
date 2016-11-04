@@ -18,8 +18,10 @@
         {{maker.name | titleCase}}
       </li>
     </ul>
-    <input type="text" ng-model="$ctrl.newMaker">
-    <input type="submit" ng-click="$ctrl.sendMaker()" value="Submit">
+    <form ng-submit="$ctrl.sendMaker()">
+      <input type="text" ng-model="$ctrl.newMaker">
+      <input type="submit" value="Submit">
+    </form>
   </div>
   <div class="float-left">
     Colors
@@ -28,7 +30,9 @@
         {{color.name | titleCase}}
       </li>
     </ul>
-    <input type="text" ng-model="$ctrl.newColor">
-    <input type="submit" ng-click="$ctrl.sendColor()" value="Submit">
+    <form ng-submit="$ctrl.sendColor()">
+      <input type="text" ng-model="$ctrl.newColor">
+      <input type="submit" value="Submit">
+    </form>
   </div>
 </div>

@@ -1,13 +1,17 @@
 <div class="login">
   <h1> Log In </h1>
-  <input type="text" ng-model="$ctrl.user.username" placeholder="Username"></input> <br>
-  <input type="password" ng-model="$ctrl.user.password" placeholder="Password"></input> <br>
-  <input type="submit" ng-click="$ctrl.sendUser()" value="Submit"> <br>
+  <form ng-submit="$ctrl.sendUser()">
+    <input type="text" ng-model="$ctrl.user.username" placeholder="Username"></input> <br>
+    <input type="password" ng-model="$ctrl.user.password" placeholder="Password"></input> <br>
+    <input type="submit" value="Submit"> <br>
+  </form>
 </div>
 <div class"signup">
   <h1> Signup </h1>
-  <input type="text" ng-model="$ctrl.newUser.username" placeholder="Username"></input> <br>
-  <input type="password" ng-model="$ctrl.newUser.password" placeholder="Password"></input> <br>
-  <input type="submit" ng-click="$ctrl.sendNewUser()" value="Submit"> <br>
+  <form ng-submit="$ctrl.sendNewUser()">
+    <input type="text" ng-model="$ctrl.newUser.username" placeholder="Username"></input> <br>
+    <input type="password" ng-model="$ctrl.newUser.password" placeholder="Password"></input> <br>
+    <input type="submit" value="Submit"> <br>
+  </form>
 </div>
 <a href="/#!/"> Back to homepage </a>
