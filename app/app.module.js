@@ -10,7 +10,7 @@ var app = angular.module('carApp', [
 //Factory crea un objecte únic (Singeltone) per compartir dades entre controladors
 app.factory("Data", function () {
   return {
-    baseUrl: "localhost:8080"
+    baseUrl: "http://localhost:8080"
   };
 });
 
