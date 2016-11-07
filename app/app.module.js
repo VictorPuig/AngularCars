@@ -1,3 +1,5 @@
+var MAX_SESSION_TIME = 1000 * 60 * 5; //5 minuts
+
 var app = angular.module('carApp', [
   'carFilter',
   'carList',
@@ -18,21 +20,37 @@ app.factory("Data", function () {
 
 //http://stackoverflow.com/q/20969835
 app.factory('Auth', function(){
-  var user;
-
   //factory retorna un objecte amb 3 funcions
   return {
-    //Funcio que rep un usuari i l'asigna a la variable user del factory
+    //Funcio que rep un usuari i l'asigna al localStorage de la pagina
     setUser: function (aUser) {
-      user = aUser;
+      // JSON.stringify converteix objectes javascript a json.
+      // localStorage.setItem guarda sota una key, una cadena de text (json)
+      localStorage.setItem("user", JSON.stringify({user: aUser, time: Date.now()}));
     },
     //Funcio que retorna true o false depenent de si user te valor o no
     isLoggedIn: function () {
-      return user ? user : false;
+      // localStorage.getItem recupera la cadena que s'ha guardat (setItem)
+      // Si no existeix la key, retorna null.
+      var user = localStorage.getItem("user");
+
+      // Si getItem ha retornat algo, ho convertim a un objecte a partir de json
+      if (user)
+        user = JSON.parse(user);
+
+      // Si el temps que el usuari porta connectat es de menys de MAX_SESSION_TIME
+      // l'usuari esta loguejat. En cas contrari fem logOut de l'usuari.
+      if (user && (Date.now() - user.time) < MAX_SESSION_TIME)
+        return true;
+      else {
+        // this es refereix a l'objecte que retorna el factory
+        this.logOut();
+        return false;
+      }
     },
     //Funcio que posa user a null per a fer logout
     logOut: function () {
-      user = null;
+      localStorage.removeItem("user");
     },
     path: null
   }

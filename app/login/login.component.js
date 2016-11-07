@@ -18,7 +18,7 @@ angular.
             //que retorna l'objecte del factory
             Auth.setUser(res.data.user);
             //Si existeix Auth.path, canvia la ruta actual del navegador per Auth.path
-            if (Auth.path) {
+            if (Auth.path && Auth.path !== "/login") {
               $location.path(Auth.path);
               Auth.path = null;
             }
