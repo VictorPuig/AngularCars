@@ -9,20 +9,14 @@ angular.
         var self = this;
 
       self.sendUser = function () {
-        $http.post(Data.baseUrl + "/login",self.user)
-        .then(function(res){
-          if (res.data.err) {
-            alert(res.data.err);
-          } else {
-            //Auth es un factory que executa una funcio (setUser)
-            //que retorna l'objecte del factory
-            Auth.setUser(res.data.user);
-            //Si existeix Auth.path, canvia la ruta actual del navegador per Auth.path
+        Auth.logIn(self.user, function (err, user) {
+          if (err)
+            console.log(err);
+          else {
             if (Auth.path && Auth.path !== "/login") {
               $location.path(Auth.path);
               Auth.path = null;
-            }
-            else {
+            } else {
               //ruta per defecte
               $location.path("/");
             }

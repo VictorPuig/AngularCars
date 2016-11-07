@@ -18,7 +18,9 @@ angular.
       function carListController(Data, $http, $scope) {
         var self = this;
 
-       self.filter = Data.filter;
+        Data.getInfo(function (err, info) {
+          self.info = info;
+        });
 
         self.form = _.cloneDeep(DEFAULT_FORM);
 
@@ -93,7 +95,7 @@ angular.
                 //seleccionat = false per simular que la pagina es descarrega el filtre de nou
                 res.data.seleccionat = false;
                 //enviem les dades al servidor
-                self.filter.maker.push(res.data);
+                self.info.maker.push(res.data);
                 //inicialitzem a null
                 self.newMaker = "";
                 console.log("Maker added");
@@ -114,7 +116,7 @@ angular.
               }
               if (res.data.id) {
                 res.data.seleccionat = false;
-                self.filter.color.push(res.data);
+                self.info.color.push(res.data);
                 self.newColor = "";
                 console.log("Color added");
               }

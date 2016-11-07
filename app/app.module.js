@@ -12,14 +12,54 @@ var app = angular.module('carApp', [
 //Factory crea un objecte únic (Singeltone) per compartir dades entre controladors
 // baseUrl es la direccio del servidor node. Es genera dinamicament a partir de
 // la url del navegador
-app.factory("Data", function () {
+app.factory("Data", ["$http", function ($http) {
   return {
-    baseUrl: "http://" + window.location.hostname + ":8080"
+    baseUrl: "http://" + window.location.hostname + ":8080",
+    filter: {},
+    cars: [],
+    getInfo: function (cb) {
+      // si cb es undefined, fem que sigui una funcio que retorna undefined.
+      if (!cb)
+        cb = _.noop;
+
+      // si filter no es undefined i no esta buit, el retornem directament
+      if (this.filter && !_.isEmpty(this.filter))
+        cb(null, this.filter);
+
+      var self = this;
+      //Angular rep les dades dels filtres de /getInfo
+      $http.get(this.baseUrl + '/getInfo')
+        .then(function(res){
+          //executa una funcio que afegeix l'atribut seleccionat a cada element de self.data.filter.maker
+          self.filter.maker = res.data.maker.map(function(el){
+            //s'inicialitza el valor a false
+            el.seleccionat = false;
+            return el;
+          });
+          self.filter.color = res.data.color.map(function(el){
+            el.seleccionat = false;
+            return el;
+          });
+
+          cb(null, self.filter);
+        });
+    },
+    getCars: function (filter, cb) {
+      $http.post(this.baseUrl + "/getCars", filter)
+        .then(function(res){
+          if (res.data.err) { // Si l'objecte que rebem (json servidor) conte err
+                              // l'imprimim per consola i l'assignem a self.err
+            cb(err);
+          } else {
+            cb(null, res.data.rows);
+          }
+        });
+    }
   };
-});
+}]);
 
 //http://stackoverflow.com/q/20969835
-app.factory('Auth', function(){
+app.factory('Auth', ["$http", function(){
   //factory retorna un objecte amb 3 funcions
   return {
     //Funcio que rep un usuari i l'asigna al localStorage de la pagina
@@ -27,6 +67,20 @@ app.factory('Auth', function(){
       // JSON.stringify converteix objectes javascript a json.
       // localStorage.setItem guarda sota una key, una cadena de text (json)
       localStorage.setItem("user", JSON.stringify({user: aUser, time: Date.now()}));
+    },
+    logIn: function (user, cb) {
+      $http.post(this.baseUrl + "/login", user)
+        .then(function(res){
+          if (res.data.err) {
+            cb(res.data.err);
+          } else {
+            //Auth es un factory que executa una funcio (setUser)
+            //que retorna l'objecte del factory
+            this.setUser(res.data.user);
+
+            cb(null, res.data.user);
+          }
+        });
     },
     //Funcio que retorna true o false depenent de si user te valor o no
     isLoggedIn: function () {
@@ -54,7 +108,7 @@ app.factory('Auth', function(){
     },
     path: null
   }
-});
+}]);
 
 //Array per les rutas a les que nomes els usuaris loguejats tindran acces
 var PROTECTED_PATHS = ["/carForm"];
