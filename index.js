@@ -18,7 +18,44 @@ var http = require('http');
 var fs = require('fs');
 var stream = require("stream");
 var cors = require("cors");
+var async = require("async");
 var config = require("./config.json");
+
+//getCarUrl es una funcio asincrona que executa un callback amb la (url d'un cotxe)
+var getCarUrl = function (car, cb) {
+  //async.parallel executa les funcions dintre de [] a la vegada
+  //quan acaben d'executarse, s'executa la ultima
+  async.parallel([
+    function (callback) {
+      //Si el objecte cotxe que rebem no conte el parametre maker.name
+      if (!car.maker.name) {
+        //demanem el nom del maker (que es la id) a la BDD
+        queryDB("SELECT * FROM car_maker WHERE id = " + car.maker, function (err, res) {
+          //i el guardem
+          car.maker = res[0];
+          //callback (null) avisa a parallel que la funcio ja s'ha executat
+          callback(null);
+        });
+      }
+      else
+        callback(null);
+    },
+    function (callback) {
+      if (!car.color.name) {
+        queryDB("SELECT * FROM car_color WHERE id = " + car.color, function (err, res) {
+          car.color = res[0];
+          callback(null);
+        });
+      }
+      else
+        callback(null);
+    }
+  ], function (err, res) {
+    //Una vegada executades les funcions precedents[]
+    //el callback de getCarUrl conte la url de la imatge (url)
+    cb(err, "img/cars/" + car.maker.name + "_" + car.name + "_" + car.color.name + ".jpg");
+  });
+};
 
 // Rep els filtres i genera les consultes SQL
 function getConsulta (filter) {
@@ -345,10 +382,22 @@ app.post("/getCars", function(req, res){
       } else {
         //console.log(rows);
         infoCars.rows = rows;
-        // source es una variable que conte l'origien de les dades
-        // assignem l'origen de les dades a l'objecte que retornem al client
-        infoCars.source = rows.source;
-        res.send(infoCars);
+
+        //async.map rep les rows de la queryDB (objecte car)
+        //i retorna una array (urls) amb les url del les imatges
+        //executant la funcio getCarUrl per cada cotxe (rows)
+        async.map(rows, getCarUrl, function (err, urls) {
+          //Recorrem les dos arrays (array de cars (rows) i array de urls (urls))
+          for (var i = 0; i < rows.length; i++) {
+            //i inserim la url de cada cotxe a infoCars.rows[i].url
+            infoCars.rows[i].url = urls[i];
+          }
+
+          // source es una variable que conte l'origien de les dades
+          // assignem l'origen de les dades a l'objecte que retornem al client
+          infoCars.source = rows.source;
+          res.send(infoCars);
+        });
       }
     });
   }
@@ -493,19 +542,22 @@ app.post("/addCar", function (req, res) {
         res.send({err: "Error uploading image! Try again."});
 
       } else {
-        //fs.createWriteStream crea un stream per escriure un fitxer
-        //se li pasa la ruta de l'arxiu (imatge)
-        var file = fs.createWriteStream("app/img/cars/" + req.body.maker.name + "_" + req.body.name + "_" + req.body.color.name + ".jpg");
-        //creem un buffer (array de bytes) a partir de les dades de la imatge
-        //codificades en base64, que rebem del client
-        var imgBytes = new Buffer(req.body.img, "base64");
-        //emmagatzema la resposta al arxiu (imatge)
-        var bufferStream = new stream.PassThrough();
-        bufferStream.end(imgBytes);
-        bufferStream.pipe(file);
+        getCarUrl(req.body, function (err, url) {
+          //fs.createWriteStream crea un stream per escriure un fitxer
+          //se li pasa la ruta de l'arxiu (imatge)
+          //url es la url de la imatge que retorna el callback de la funcio getCarUrl
+          var file = fs.createWriteStream("app/" + url);
+          //creem un buffer (array de bytes) a partir de les dades de la imatge
+          //codificades en base64, que rebem del client
+          var imgBytes = new Buffer(req.body.img, "base64");
+          //emmagatzema la resposta al arxiu (imatge)
+          var bufferStream = new stream.PassThrough();
+          bufferStream.end(imgBytes);
+          bufferStream.pipe(file);
 
-        //Si no hi ha cap error, s'envia al client success: true
-        res.send({success: true});
+          //Si no hi ha cap error, s'envia al client success: true
+          res.send({success: true});
+        });
       }
     }
   });
