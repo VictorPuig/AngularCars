@@ -74,10 +74,11 @@ angular.
               self.data.cars = self.data.cars.concat(rows);
 
               // Si rebem menys de 3 cotxes per mostrar destruim
-              // l'EventListener d'events "scroll"
+              // l'EventListener d'events "scroll" i "resize"
               if (rows.length < 3) {
                 $window.removeEventListener('scroll', debounced);
-                console.log("scroll listener destruit");
+                $window.removeEventListener('resize', debounced);
+                console.log("listeners destruits");
                 self.data.final = true;
               } else {
                 // Espera a que angular dibuixi la pagina i despres comprova
@@ -95,7 +96,9 @@ angular.
           // addEventListener ens permet especificar una funcio que s'executara
           // quan es produeixi un event (en aquest cas "scroll")
           $window.addEventListener("scroll", debounced);
-          console.log("scroll listener creat");
+          // resize es un event que s'emet cada vegada que la finsetra canvia de mida
+          $window.addEventListener("resize", debounced);
+          console.log("listeners creats");
 
           // Asignem el filter que rebem de car-filter a self.data
           self.data.filter = filter;
