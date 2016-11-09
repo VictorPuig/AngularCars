@@ -11,6 +11,7 @@ var NO_ROOT = process.argv[2] === "--no-root";
 var express = require("express");
 var bodyParser = require("body-parser");
 var mysql = require("mysql");
+//var mysql = require("mysql2");
 var parallel = require("async").parallel;
 var Memcached = require('memcached');
 var _ = require("lodash");
@@ -229,9 +230,12 @@ function queryDB (query, skipMemcahed, cb) {
 
     console.log("queryDB[" + thisIdx + "]: Demanant la resposta a SQL");
     // en cas de que no tingui la resposta, demanem la resposta a SQL
+    console.log("Query", query);
     con.query(query, function (err, rows) {
       if (err)
         return cb(err);
+
+      console.log("Rows", rows);
 
       // Si memcached esta viu, i no el saltem, guardem les dades de sql a memcached
       if (memcachedStatus && !skipMemcahed) {
@@ -400,6 +404,47 @@ app.post("/getCars", function(req, res){
         });
       }
     });
+  }
+});
+
+app.post("/getCarDetail", function(req, res) {
+  console.log("peticio getCarDetail");
+
+  if (!mysqlStatus) {
+    res.send({err: {code: "Servidor MySQL offline!"}});
+  } else {
+    var consulta = `
+      SELECT cmod.id, cmod.name, cmak.id, cmak.name, ccol.id, ccol.name
+      FROM car_model cmod JOIN car_maker cmak JOIN car_color ccol
+      ON cmod.maker = cmak.id AND cmod.color = ccol.id
+      WHERE cmod.id = ` + req.body.id + ";";
+
+      queryDB(consulta, function(err, rows){
+        if (err)
+          res.send({err: err});
+        else {
+          var row = rows[0];
+          var car = {};
+
+          console.log("rows", row);
+
+          car.id = row[0];
+          car.name = row[1];
+          car.maker = {
+            id: row[2],
+            name: row[3]
+          };
+          car.color = {
+            id: row[4],
+            name: row[5]
+          };
+
+          car.url = getCarUrl(car);
+
+          res.send({car: car});
+        }
+      });
+
   }
 });
 

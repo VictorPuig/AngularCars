@@ -17,6 +17,7 @@ app.factory("Data", ["$http", function ($http) {
     baseUrl: "http://" + window.location.hostname + ":8080",
     filter: {},
     cars: [],
+    lastSelectedCar: null,  // lastSelectedCar guarda el cotxe del qual mostrar els detalls
     getInfo: function (cb) {
       // si cb es undefined, fem que sigui una funcio que retorna undefined.
       if (!cb)
@@ -52,6 +53,21 @@ app.factory("Data", ["$http", function ($http) {
             cb(err);
           } else {
             cb(null, res.data.rows);
+          }
+        });
+    },
+    // getCarDetail es una funcio que rep una id i crida el seu callback
+    // amb un objecte car amb totes les dades
+    getCarDetail: function (id, cb) {
+      // Creem un objecte amb les dades (id) que demanarem al servidor node
+      var obj = {};
+      obj.id = id
+      $http.post(this.baseUrl + "/getCarDetail", obj)
+        .then(function(res){
+          if (res.data.err) {
+            cb(err);
+          } else {
+            cb(null, res.data.car);
           }
         });
     }

@@ -1,7 +1,7 @@
-<div>
-  <img width="250px" height="200px" ng-src="{{$ctrl.car | getImgUrl}}"></img><br>
+<div >
+  <img width="250px" height="200px" ng-src="{{$ctrl.car.url}}"></img><br>
   Name: {{$ctrl.car.name | titleCase}} <br>
-  Color: {{$ctrl.carColor.name | titleCase}} <br>
-  Maker: {{$ctrl.carMaker.name | titleCase}} <br>
+  Color: {{$ctrl.car.color.name | titleCase}} <br>
+  Maker: {{$ctrl.car.maker.name | titleCase}} <br>
   <a href="/#!/"> Back to homepage </a>
 </div>
