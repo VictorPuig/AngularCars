@@ -20,6 +20,9 @@ angular
         when('/login', {
           template: '<login></login>'
         }).
+        when('/noData', {
+          template: '<no-data></no-data>'
+        }).
         otherwise('/');
     }
   ]);
