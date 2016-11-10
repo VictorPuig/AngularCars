@@ -15,7 +15,10 @@ angular.
         self.data.filter = {};
         //Angular rep les dades dels filtres de /getInfo
         Data.getInfo(function (err, info) {
-          self.data.filter = info;
+          if (err)
+            alert(err.code);
+          else
+            self.data.filter = info;
         });
 
         // Funcio que s'executa quan es fa click al link logOut

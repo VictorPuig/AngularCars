@@ -19,7 +19,10 @@ angular.
         var self = this;
 
         Data.getInfo(function (err, info) {
-          self.info = info;
+          if (err)
+            alert(err.code);
+          else
+            self.info = info;
         });
 
         self.form = _.cloneDeep(DEFAULT_FORM);

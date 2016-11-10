@@ -1,7 +1,6 @@
 var MYSQL_RECONNECT_INTERVAL = 1000;
 var MEMCACHED_LIFETIME = 10;
 var MEMCACHED_TIMEOUT = 100;
-var MYSQL_HOST = '192.168.1.43';
 var ERR_MEMCACHED_DEAD = "Error: memcached dead";
 var ERR_MYSQL_DUPLICATE_ENTRY = "ER_DUP_ENTRY";
 
@@ -147,7 +146,7 @@ function connectaBaseDades() {
   con.connect(function(err) {
     if (err) {
       // En cas d'error, mostrar per consola
-      console.error('Error conectant a MySql: ' + err.stack);
+      console.error('Error conectant a MySql: ' + err.code);
 
       // La conexio ha fallat, per tant el server esta offline
       mysqlStatus = false;

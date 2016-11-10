@@ -34,7 +34,7 @@ angular.
             alert("User already exists!")
           }
           else {
-            alert("User succesfully create. You can logn now");
+            alert("User succesfully created. You can logn now");
             //$route.reload() refresca la pagina actual
             //usuari creat correctament, torna a fer login per entrar
             $route.reload();

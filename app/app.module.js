@@ -30,6 +30,9 @@ app.factory("Data", ["$http", function ($http) {
       //Angular rep les dades dels filtres de /getInfo
       $http.get(this.baseUrl + '/getInfo')
         .then(function(res){
+          if (res.data.err)
+            return cb(res.data.err);
+
           //executa una funcio que afegeix l'atribut seleccionat a cada element de self.data.filter.maker
           self.filter.maker = res.data.maker.map(function(el){
             //s'inicialitza el valor a false
@@ -49,7 +52,7 @@ app.factory("Data", ["$http", function ($http) {
         .then(function(res){
           if (res.data.err) { // Si l'objecte que rebem (json servidor) conte err
                               // l'imprimim per consola i l'assignem a self.err
-            cb(err);
+            cb(res.data.err);
           } else {
             cb(null, res.data.rows);
           }
