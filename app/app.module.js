@@ -6,13 +6,14 @@ var app = angular.module('carApp', [
   'ngRoute',
   'carForm',
   'carDetail',
-  'login'
+  'login',
+  'noData'
 ]);
 
 //Factory crea un objecte únic (Singeltone) per compartir dades entre controladors
 // baseUrl es la direccio del servidor node. Es genera dinamicament a partir de
 // la url del navegador
-app.factory("Data", ["$http", function ($http) {
+app.factory("Data", ["$http", "$location", function ($http, $location) {
   return {
     baseUrl: "http://" + window.location.hostname + ":8080",
     filter: {},
@@ -30,18 +31,26 @@ app.factory("Data", ["$http", function ($http) {
       //Angular rep les dades dels filtres de /getInfo
       $http.get(this.baseUrl + '/getInfo')
         .then(function(res){
-          //executa una funcio que afegeix l'atribut seleccionat a cada element de self.data.filter.maker
-          self.filter.maker = res.data.maker.map(function(el){
-            //s'inicialitza el valor a false
-            el.seleccionat = false;
-            return el;
-          });
-          self.filter.color = res.data.color.map(function(el){
-            el.seleccionat = false;
-            return el;
-          });
+          if (res.data.err) {
+            cb(res.data.err);
+          }
+          else {
+            //executa una funcio que afegeix l'atribut seleccionat a cada element de self.data.filter.maker
+            self.filter.maker = res.data.maker.map(function(el){
+              //s'inicialitza el valor a false
+              el.seleccionat = false;
+              return el;
+            });
+            self.filter.color = res.data.color.map(function(el){
+              el.seleccionat = false;
+              return el;
+            });
 
-          cb(null, self.filter);
+            cb(null, self.filter);
+          }
+        })
+        .catch(function(cb) {
+          $location.path('/noData')
         });
     },
     getCars: function (filter, cb) {
@@ -49,7 +58,7 @@ app.factory("Data", ["$http", function ($http) {
         .then(function(res){
           if (res.data.err) { // Si l'objecte que rebem (json servidor) conte err
                               // l'imprimim per consola i l'assignem a self.err
-            cb(err);
+            cb(res.data.err);
           } else {
             cb(null, res.data.rows);
           }

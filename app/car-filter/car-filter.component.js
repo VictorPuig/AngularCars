@@ -1,9 +1,9 @@
 angular.
-  module('carFilter').
+  module('carFilter',[]).
   component('carFilter', {
     templateUrl: 'car-filter/car-filter.template.html',
-    controller: ['Data', "$scope","$rootScope", "Auth",
-      function carFilterController(Data, $scope, $rootScope, Auth) {
+    controller: ['Data', "$scope","$rootScope", "Auth", "$location",
+    function carFilterController(Data, $scope, $rootScope, Auth, $location) {
         var self = this;
 
         self.auth = Auth;
@@ -12,10 +12,14 @@ angular.
         self.data = {};
 
         // filter es un objecte buit que conte maker i color
-        self.data.filter = {};
+        self.data.filter = false;
         //Angular rep les dades dels filtres de /getInfo
         Data.getInfo(function (err, info) {
-          self.data.filter = info;
+          //Si arriba error de la consulta a MySQL, redirigim al usuari a /noData
+          if (err)
+            $location.path('/noData');
+          else
+            self.data.filter = info;
         });
 
         // Funcio que s'executa quan es fa click al link logOut
